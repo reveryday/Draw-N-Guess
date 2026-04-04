@@ -1,6 +1,5 @@
 <view class="container">
   <view class="card">
-
     <view class="card-title">
       <text>房间设置</text>
     </view>
@@ -34,30 +33,11 @@
         <button class="number-btn" bindtap="changeRounds" data-action="plus" disabled="{{totalRounds >= 10}}">+</button>
       </view>
     </view>
-
-  </view>
-
-  <view class="card">
-
-    <view class="card-title">
-      <text>密码设置</text>
-    </view>
-    <view class="password-section">
-      <view class="password-toggle">
-        <switch checked="{{hasPassword}}" bindchange="onPasswordToggle"/>
-        <text class="toggle-label">启用房间密码</text>
-      </view>  
-      <view class="password-input" wx:if="{{hasPassword}}">
-        <input class="setting-input" placeholder="输入4-8位密码" bindinput="onPasswordInput" value="{{password}}" maxlength="8" type="text"/>
-      </view>
-    </view>
-
   </view>
 
   <view class="create-section">
-    <button class="btn-primary create-btn" bindtap="intoRoom">
+    <button class="btn-primary create-btn" bindtap="intoRoom" disabled="{{loading}}">
       {{loading ? '创建中...' : '创建房间'}}
     </button>
   </view>
-
 </view>

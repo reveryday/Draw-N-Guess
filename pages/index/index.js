@@ -4,7 +4,7 @@ const defaultAvatarUrl = 'https://mmbiz.qpic.cn/mmbiz/icTdbqWNOwNRna42FI242Lcia0
 
 Page({
   data: {
-    avatarUrl: defaultAvatarUrl, // 头像
+    avatarUrl: defaultAvatarUrl, // 默认头像
     nickname: null,
     isLoggedIn: false
   },

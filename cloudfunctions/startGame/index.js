@@ -8,48 +8,33 @@ exports.main = async (event) => {
   const { roomId } = event;
   const { OPENID } = cloud.getWXContext();
 
-  if (!roomId) {
-    return { success: false, errMsg: '缺少 roomId' };
+  if (!roomId) return { success: false, errMsg: '缺少 roomId' };
+
+  const roomRes = await db.collection('room').doc(roomId).get();
+  const room = roomRes.data;
+  if (!room) return { success: false, errMsg: '房间不存在' };
+  if (room.status !== 'waiting') return { success: false, errMsg: '房间已开始或已结束' };
+  if (room.ownerOpenid !== OPENID) return { success: false, errMsg: '只有房主可以开始游戏' };
+
+  // 至少1名非房主玩家，且全部已准备
+  const nonHostPlayers = (room.players || []).filter(p => p.openid !== room.ownerOpenid);
+  if (nonHostPlayers.length === 0) {
+    return { success: false, errMsg: '至少需要1名其他玩家才能开始' };
+  }
+  if (!nonHostPlayers.every(p => p.isReady)) {
+    return { success: false, errMsg: '还有玩家未准备' };
   }
 
-  try {
-    // 1️⃣ 查房间
-    const roomRes = await db.collection('room').doc(roomId).get();
-    const room = roomRes.data;
-    if (!room) {
-      return { success: false, errMsg: '房间不存在' };
+  await db.collection('room').doc(roomId).update({
+    data: {
+      status: 'playing',
+      currentRoundIdx: 0,
+      strokes: [],
+      endAt: null,
+      updatedAt: db.serverDate()
     }
+  });
 
-    // 2️⃣ 状态检查
-    if (room.status !== 'waiting') {
-      return { success: false, errMsg: '房间已开始或已结束' };
-    }
-
-    // 3️⃣ 权限检查
-    if (room.ownerOpenid !== OPENID) {
-      return { success: false, errMsg: '只有房主可以开始游戏' };
-    }
-
-    // 4️⃣ 更新房间状态（⚡️使用 serverDate() 强制触发 watch）
-    await db.collection('room').doc(roomId).update({
-      data: {
-        status: 'playing',
-        currentRoundIdx: 1,
-        // 清空上一轮笔画（防止残留）
-        strokes: [],
-        // 所有玩家准备状态重置
-        players: _.map(item => ({
-          ...item,
-          isReady: false
-        })),
-        updatedAt: db.serverDate() // ✅ 关键
-      }
-    });
-
-    // 5️⃣ 返回结果（前端根据 status=playing 进入游戏逻辑）
-    return { success: true, msg: '游戏开始', status: 'playing' };
-  } catch (err) {
-    console.error('[startGame] error:', err);
-    return { success: false, errMsg: err.message };
-  }
+  console.log('[startGame] 游戏开始 roomId=', roomId, 'by', OPENID);
+  return { success: true, status: 'playing' };
 };

@@ -1,57 +1,41 @@
+// cloudfunctions/startRound/index.js
+// 开始一轮：创建回合记录，进入"画手出题"阶段
+// 词由画手在前端输入后调用 submitWord 提交，此处不设词
 const cloud = require('wx-server-sdk');
 cloud.init();
 const db = cloud.database();
-const _ = db.command;  // ✅ 建议加上，后续用方便
-
-// ✅ 词库
-const WORDS = [
-  '小猫', '小狗', '苹果', '香蕉', '大象', '飞机', '雨伞', '篮球',
-  '冰淇淋', '长颈鹿', '太阳', '月亮', '火箭', '汉堡', '熊猫'
-];
-const randomWord = () => WORDS[Math.floor(Math.random() * WORDS.length)];
 
 exports.main = async (event) => {
-  const { roomId, roundIdx, drawer, word } = event;
+  const { roomId, roundIdx, drawer } = event;
 
-  // ✅ 1. 生成单词
-  let finalWord = word;
-  if (!finalWord || !WORDS.includes(finalWord)) {
-    finalWord = randomWord();
-  }
-
-  // ✅ 2. 创建新的 round 记录
+  // 创建回合记录，status: 'choosing' 表示等待画手出题
   const roundRes = await db.collection('rounds').add({
     data: {
       roomId,
       roundIdx,
       drawer,
-      word: finalWord,
+      word: '',
+      status: 'choosing',
       drawings: [],
       guesses: [],
-      startTime: db.serverDate(),  // ✅ 改为云端时间
+      startTime: null,
       endTime: null,
-      usedHint: false,
       scores: {}
     }
   });
 
-  // ✅ 3. 拿到 roundId 和 roundTime
   const roundId = roundRes._id;
-  const roomDoc = await db.collection('room').doc(roomId).get();
-  const roundTime = roomDoc.data.roundTime || 60;
-  const endAt = Date.now() + roundTime * 1000;
 
-  // ✅ 4. 更新 room 状态（关键！）
+  // 更新房间：记录当前回合和画手，endAt 为 null（计时等画手出题后再启动）
   await db.collection('room').doc(roomId).update({
     data: {
       currentRoundId: roundId,
       currentDrawer: drawer,
       currentRoundIdx: roundIdx,
-      word: finalWord,
-      endAt,
-      updatedAt: db.serverDate()  // ⚡️⚡️ 必须用 serverDate()！
+      endAt: null,
+      updatedAt: db.serverDate()
     }
   });
 
-  return { success: true, roundIdx, word: finalWord, drawer, roundId };
+  return { success: true, roundIdx, drawer, roundId };
 };
