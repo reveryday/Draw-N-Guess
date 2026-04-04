@@ -1,0 +1,456 @@
+/* 游戏容器 */
+.game-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+
+
+/* 游戏头部 */
+.game-header {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 15rpx 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.game-info {
+  display: flex;
+  gap: 30rpx;
+  align-items: center;
+}
+
+.room-id {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.current-word {
+  font-size: 28rpx;
+  color: #667eea;
+  font-weight: 600;
+  background: #e8f2ff;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.timer {
+  font-size: 26rpx;
+  color: #ff4757;
+  font-weight: 600;
+}
+
+.game-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5rpx;
+}
+
+.round-info {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.drawer-info {
+  font-size: 26rpx;
+  color: #667eea;
+  font-weight: 500;
+}
+
+/* 画板区域 */
+.canvas-section {
+  flex-shrink: 0;
+  background: white;
+  margin: 10rpx 20rpx 10rpx 20rpx;
+  border-radius: 20rpx;
+  padding: 15rpx;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+  height: 45vh;
+  overflow: hidden;
+}
+
+.canvas-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.canvas-tools {
+  display: flex;
+  gap: 15rpx;
+  align-items: center;
+}
+
+.tool-btn {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  border: 2rpx solid #e0e0e0;
+  background: #fafafa;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.tool-btn.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.clear-btn {
+  padding: 10rpx 20rpx;
+  background: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 25rpx;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+
+.drawing-canvas {
+  flex: 1;
+  width: 100%;
+  background: #ffffff;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 15rpx;
+  min-height: 300rpx;
+}
+
+/* 用户头像区域 - 独立区域 */
+.players-section {
+  background: white;
+  margin: 0 20rpx 10rpx 20rpx;
+  border-radius: 20rpx;
+  padding: 15rpx;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+  height: 120rpx;
+  flex-shrink: 0;
+}
+
+.players-list {
+  white-space: nowrap;
+  display: flex;
+}
+
+.player-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 30rpx;
+  padding: 15rpx;
+  border-radius: 15rpx;
+  min-width: 120rpx;
+  position: relative;
+}
+
+.player-item:last-child {
+  margin-right: 0;
+}
+
+.player-item.drawer {
+  background: #e8f2ff;
+  border: 2rpx solid #667eea;
+}
+
+.player-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #e0e0e0;
+  margin-bottom: 10rpx;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5rpx;
+}
+
+.player-name {
+  font-size: 22rpx;
+  color: #333;
+  font-weight: 500;
+  text-align: center;
+}
+
+.player-score {
+  font-size: 20rpx;
+  color: #666;
+  text-align: center;
+}
+
+.player-status {
+  position: absolute;
+  top: 5rpx;
+  right: 5rpx;
+  display: flex;
+  align-items: center;
+}
+
+.status-icon {
+  font-size: 24rpx;
+}
+
+/* 聊天室区域 - 独立区域 */
+.chat-section {
+  background: white;
+  margin: 0 20rpx 10rpx 20rpx;
+  border-radius: 20rpx;
+  padding: 15rpx;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  margin-bottom: 20rpx;
+  min-height: 0;
+  overflow-y: auto;
+  height: 0;
+}
+
+.message-item {
+  margin-bottom: 15rpx;
+  padding: 10rpx 15rpx;
+  border-radius: 10rpx;
+}
+
+.message-item.chat {
+  background: #f8f9fa;
+}
+
+.message-item.system {
+  background: #e8f2ff;
+  text-align: center;
+}
+
+.message-item.correct {
+  background: #d4edda;
+  text-align: center;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5rpx;
+}
+
+.message-sender {
+  font-size: 22rpx;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.message-text {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.4;
+}
+
+.system-message {
+  font-size: 24rpx;
+  color: #666;
+  font-style: italic;
+}
+
+.correct-message {
+  font-size: 26rpx;
+  color: #28a745;
+  font-weight: 600;
+}
+
+.chat-input-section {
+  display: flex;
+  gap: 15rpx;
+  align-items: center;
+  padding-top: 15rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 15rpx 20rpx;
+  border: 1rpx solid #e0e0e0;
+  border-radius: 25rpx;
+  font-size: 26rpx;
+  background: #fafafa;
+}
+
+.chat-input:focus {
+  border-color: #667eea;
+  background: white;
+}
+
+.send-btn {
+  padding: 15rpx 25rpx;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 25rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.send-btn:disabled {
+  background: #ccc;
+}
+
+.drawer-hint {
+  text-align: center;
+  padding: 20rpx;
+  background: #fff3cd;
+  border-radius: 10rpx;
+  border: 1rpx solid #ffeaa7;
+}
+
+.drawer-hint text {
+  font-size: 24rpx;
+  color: #856404;
+}
+
+/* 游戏结束弹窗 */
+.game-over-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  margin: 40rpx;
+  max-width: 600rpx;
+  width: 100%;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.final-scores {
+  margin-bottom: 40rpx;
+}
+
+.score-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.score-item:last-child {
+  border-bottom: none;
+}
+
+.rank {
+  font-size: 24rpx;
+  color: #667eea;
+  font-weight: 600;
+  min-width: 80rpx;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 20rpx;
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 20rpx;
+  background: #f8f9fa;
+  color: #666;
+  border: 1rpx solid #e0e0e0;
+  border-radius: 15rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+.btn-primary {
+  flex: 1;
+  padding: 20rpx;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 15rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* 响应式适配 */
+@media (max-width: 400px) {
+  .canvas-section {
+    min-height: 250rpx;
+  }
+}
+
+/* 准备状态 */
+.ready-icon {
+  color: #28a745;
+  font-size: 28rpx;
+}
+
+.input-area {
+  padding-top: 15rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.ready-section {
+  text-align: center;
+}
+
+.ready-btn {
+  width: 90%;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: #667eea;
+  color: white;
+  font-size: 32rpx;
+  font-weight: 600;
+  border-radius: 40rpx;
+}
+
+.ready-btn[disabled] {
+  background-color: #ccc;
+  color: #666;
+}
+
+.ready-btn:active {
+  background: #5a6fcf;
+}

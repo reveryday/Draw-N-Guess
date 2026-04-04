@@ -1,0 +1,63 @@
+<view class="container">
+  <view class="card">
+
+    <view class="card-title">
+      <text>房间设置</text>
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">最大人数</text>
+      <view class="number-selector">
+        <button class="number-btn" bindtap="changeMaxPlayers" data-action="minus" disabled="{{maxPlayers <= 2}}">-</button>
+        <text class="number-value">{{maxPlayers}}</text>
+        <button class="number-btn" bindtap="changeMaxPlayers" data-action="plus" disabled="{{maxPlayers >= 8}}">+</button>
+      </view>
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">每轮时间</text>
+      <view class="time-selector">
+        <view class="time-option {{roundTime === 60 ? 'active' : ''}}" bindtap="setRoundTime" data-time="60">
+          <text>1分钟</text>
+        </view>
+        <view class="time-option {{roundTime === 90 ? 'active' : ''}}" bindtap="setRoundTime" data-time="90">
+          <text>1.5分钟</text>
+        </view>
+        <view class="time-option {{roundTime === 120 ? 'active' : ''}}" bindtap="setRoundTime" data-time="120">
+          <text>2分钟</text>
+        </view>
+      </view>
+    </view>
+    <view class="setting-item">
+      <text class="setting-label">游戏轮数</text>
+      <view class="number-selector">
+        <button class="number-btn" bindtap="changeRounds" data-action="minus" disabled="{{totalRounds <= 3}}">-</button>
+        <text class="number-value">{{totalRounds}}</text>
+        <button class="number-btn" bindtap="changeRounds" data-action="plus" disabled="{{totalRounds >= 10}}">+</button>
+      </view>
+    </view>
+
+  </view>
+
+  <view class="card">
+
+    <view class="card-title">
+      <text>密码设置</text>
+    </view>
+    <view class="password-section">
+      <view class="password-toggle">
+        <switch checked="{{hasPassword}}" bindchange="onPasswordToggle"/>
+        <text class="toggle-label">启用房间密码</text>
+      </view>  
+      <view class="password-input" wx:if="{{hasPassword}}">
+        <input class="setting-input" placeholder="输入4-8位密码" bindinput="onPasswordInput" value="{{password}}" maxlength="8" type="text"/>
+      </view>
+    </view>
+
+  </view>
+
+  <view class="create-section">
+    <button class="btn-primary create-btn" bindtap="intoRoom">
+      {{loading ? '创建中...' : '创建房间'}}
+    </button>
+  </view>
+
+</view>

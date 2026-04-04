@@ -1,0 +1,118 @@
+<view class="game-container">
+  <!-- 游戏头部信息 -->
+  <view class="game-header">
+    <view class="game-info">
+      <text class="room-id">房间号: {{roomCode}}</text>
+      <text class="timer">剩余时间: {{timeLeft}}s</text>
+    </view>
+    <view class="game-status">
+      <text class="round-info">第{{currentRound}}/{{totalRounds}}轮</text>
+      <text class="drawer-info">{{currentDrawerNickName}}正在画画</text>
+    </view>
+  </view>
+
+  <!-- 画板区域 -->
+  <view class="canvas-section">
+    <view class="canvas-header">
+      <view class="canvas-tools" wx:if="{{isDrawer}}">
+        <button class="tool-btn {{selectedTool === 'pen' ? 'active' : ''}}" bindtap="selectTool" data-tool="pen">✏️</button>
+        <button class="tool-btn {{selectedTool === 'eraser' ? 'active' : ''}}" bindtap="selectTool" data-tool="eraser">🧹</button>
+        <button class="clear-btn" bindtap="clearCanvas">清空</button>
+      </view>
+    </view>
+    <canvas
+      class="drawing-canvas"
+      canvas-id="drawingCanvas"
+      bindtouchstart="onTouchStart"
+      bindtouchmove="onTouchMove"
+      bindtouchend="onTouchEnd"
+      disable-scroll="{{true}}"
+      style="pointer-events:{{isDrawer ? 'auto' : 'none'}}"
+    ></canvas>
+  </view>
+
+  <!-- 用户头像区域 -->
+  <view class="players-section">
+    <scroll-view class="players-list" scroll-x="true">
+      <view class="player-item {{players.openid === currentDrawer ? 'drawer' : ''}}" wx:for="{{players}}" wx:key="_id">
+        <image class="player-avatar" src="{{item.avatarUrl || '/images/default-avatar.png'}}"></image>
+        <view class="player-info">
+          <text class="player-name">{{item.nickName}}</text>
+          <text class="player-score">{{item.score || 0}}分</text>
+        </view>
+        <view class="player-status">
+          <text class="status-icon" wx:if="{{item.openid === currentDrawer}}">🎨</text>
+          <text class="status-icon" wx:elif="{{item.hasGuessed}}">✅</text>
+          <text class="status-icon ready-icon" wx:elif="{{gameStatus === 'waiting' && 'item.isReady'}}">✔️</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 聊天室区域 -->
+  <view class="chat-section">
+    <scroll-view class="chat-messages" scroll-y="true" scroll-into-view="{{scrollToView}}">
+      <view class="message-item {{message.type}}" wx:for="{{messages}}" wx:key="id" id="msg-{{index}}">
+        <view class="message-content" wx:if="{{message.type === 'chat'}}">
+          <text class="message-sender">{{message.sender}}:</text>
+          <text class="message-text">{{message.content}}</text>
+        </view>
+        <view class="message-content" wx:elif="{{message.type === 'system'}}">
+          <text class="system-message">{{message.content}}</text>
+        </view>
+        <view class="message-content" wx:elif="{{message.type === 'correct'}}">
+          <text class="correct-message">🎉 {{message.sender}} 猜对了！</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 输入区域：根据游戏状态切换 -->
+    <view class="input-area">
+      <!-- 等待状态：显示准备按钮 -->
+      <view class="ready-section" wx:if="{{gameStatus === 'waiting'}}">
+        <button class="ready-btn" bindtap="handleReady" disabled="{{currentUserReady}}">
+          {{currentUserReady ? '已准备' : '点击准备'}}
+        </button>
+        <button wx:if="{{gameStatus === 'waiting' && isOwner}}" class="start-btn" bindtap="startGame">
+          开始游戏
+        </button>
+      </view>
+      
+      <!-- 游戏进行中 -->
+      <block wx:else>
+        <view class="chat-input-section" wx:if="{{!isDrawer}}">
+          <input
+            class="chat-input"
+            placeholder="输入你的答案..."
+            bindinput="onChatInput"
+            bindconfirm="sendMessage"
+            value="{{chatInput}}"
+            maxlength="20"
+          />
+          <button class="send-btn" bindtap="sendMessage" disabled="{{!chatInput.trim()}}">发送</button>
+        </view>
+        <view class="drawer-hint" wx:else>
+          <text>你是画家，专心画画吧！</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 游戏结束弹窗 -->
+  <view class="game-over-modal" wx:if="{{showGameOver}}">
+    <view class="modal-content">
+      <text class="modal-title">游戏结束</text>
+      <view class="final-scores">
+        <view class="score-item" wx:for="{{finalScores}}" wx:key="openid">
+          <text class="rank">第{{index + 1}}名</text>
+          <text class="player-name">{{item.nickName}}</text>
+          <text class="player-score">{{item.score}}分</text>
+        </view>
+      </view>
+      <view class="modal-actions">
+        <button class="btn-secondary" bindtap="backToHome">返回首页</button>
+        <button class="btn-primary" bindtap="playAgain">再来一局</button>
+      </view>
+    </view>
+  </view>
+</view>
