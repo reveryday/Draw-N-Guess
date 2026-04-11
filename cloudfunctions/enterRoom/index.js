@@ -31,7 +31,10 @@ exports.main = async (event) => {
     };
 
     await db.collection('room').doc(room._id).update({
-      data: { players: _.push([player]), updateTime: db.serverDate() }
+      data: {
+        players: _.push([player]),
+        updatedAt: db.serverDate()
+      }
     });
 
     return { success: true, roomId: room._id };

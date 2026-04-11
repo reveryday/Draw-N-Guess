@@ -2,9 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/create/create",
-    "pages/game/game",
-    "pages/canvas/canvas"
+    "pages/game/game"
   ],
-  "window": {
-  }
+  "window": {}
 }

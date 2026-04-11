@@ -70,14 +70,15 @@ Page({
         }
       });
 
-      if (result.success) {
+      if (result && result.success) {
         wx.navigateTo({ url: `/pages/game/game?roomCode=${roomCode}&roomId=${result.roomId}` });
       } else {
-        wx.showToast({ title: '创建失败', icon: 'none' });
+        console.error('[createRoom] failed result:', result);
+        wx.showToast({ title: (result && result.errMsg) || '创建失败', icon: 'none' });
       }
     } catch (e) {
-      console.error(e);
-      wx.showToast({ title: '创建失败', icon: 'none' });
+      console.error('[createRoom] exception:', e);
+      wx.showToast({ title: e.errMsg || e.message || '创建失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });
     }

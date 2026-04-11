@@ -7,7 +7,7 @@ exports.main = async (event) => {
   const { roomId } = event
   const db = cloud.database()
   await db.collection('room').doc(roomId).update({
-    data: { strokes: [] }
+    data: { strokes: [], updatedAt: db.serverDate() }
   })
   return { ok: true }
 }

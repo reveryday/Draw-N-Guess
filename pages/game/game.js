@@ -6,9 +6,9 @@ Page({
     roomId: '',
     roomCode: '',
     openid: '',
-    ownerOpenid: '',   // 存进 data，供 wxml 直接比较 + 调试
+    ownerOpenid: '',
 
-    /* 房间级 */
+    // 房间状态
     maxPlayers: 4,
     roundTime: 0,
     totalRounds: 0,
@@ -16,41 +16,41 @@ Page({
     currentRound: 0,
     isOwner: false,
     canStartGame: false,
-    gameStatus: 'waiting',
+    gameStatus: 'waiting',   // waiting / playing / finished
 
-    gameId: '',
-
-    /* 回合级 */
+    // 回合状态
     currentRoundId: '',
-    roundStatus: 'idle',   // idle / choosing / drawing / ended
-    drawerWord: '',        // 词条仅画手可见
+    roundStatus: 'idle',     // idle / choosing / drawing / ended
+    drawerWord: '',
     currentDrawer: '',
     currentDrawerNickName: '',
     isDrawer: false,
 
-    /* 画手出题输入 */
+    // 画手出题
     wordInput: '',
+    canSubmitWord: false,
 
-    /* 画布 */
+    // 画布
     canvasContext: null,
     selectedTool: 'pen',
     isDrawing: false,
     drawingBuffer: [],
 
-    /* 玩家 & 聊天 */
+    // 玩家 & 聊天
     players: [],
     messages: [],
     chatInput: '',
     canSendMessage: false,
 
-    /* 结束页 */
+    // UI
     currentUserReady: false,
     showGameOver: false,
     finalScores: [],
-    canSubmitWord: false
   },
 
-  /* ================= 工具函数：主动拉一次房间 ================= */
+  /* ==================== 数据同步 ==================== */
+
+  // 通过云函数拉取房间数据（轮询 + 兜底）
   async fetchRoomOnce() {
     try {
       const { result } = await wx.cloud.callFunction({
@@ -58,17 +58,94 @@ Page({
         data: { roomId: this.data.roomId }
       });
       if (result && result.success && result.room) {
-        this.onRoomSnapshot({ docs: [result.room] });
-        console.log('[fetchRoomOnce] OK, ownerOpenid=', result.room.ownerOpenid, 'myOpenid=', this.data.openid);
-      } else {
-        console.error('[fetchRoomOnce] failed:', result && result.errMsg);
+        this.processRoomData(result.room);
       }
     } catch (e) {
-      console.error('[fetchRoomOnce] exception:', e);
+      console.error('[fetchRoomOnce]', e);
     }
   },
 
-  /* ================= 微信小程序-生命周期函数 ================= */
+  // 处理房间数据（watcher 和轮询共用）
+  processRoomData(doc) {
+    if (!doc) return;
+
+    const openid = this.data.openid;
+    const players = doc.players || [];
+    const ownerOpenid = doc.ownerOpenid || '';
+    const roomStatus = doc.status || 'waiting';
+    const isOwner = !!(ownerOpenid && ownerOpenid === openid);
+    const isDrawer = !!(doc.currentDrawer && doc.currentDrawer === openid);
+    const me = players.find(p => p.openid === openid);
+
+    // 是否可以开始游戏：房主 + 至少1人 + 全部准备
+    const nonHostPlayers = players.filter(p => p.openid !== ownerOpenid);
+    const canStartGame = isOwner &&
+      nonHostPlayers.length > 0 &&
+      nonHostPlayers.every(p => !!p.isReady);
+
+    const drawerPlayer = players.find(p => p.openid === doc.currentDrawer);
+
+    this.setData({
+      ownerOpenid,
+      maxPlayers: doc.maxPlayers,
+      roundTime: doc.roundTime,
+      totalRounds: doc.totalRounds,
+      gameStatus: roomStatus,
+      currentRound: doc.currentRoundIdx || 0,
+      currentDrawer: doc.currentDrawer || '',
+      currentDrawerNickName: drawerPlayer ? drawerPlayer.nickName : '',
+      currentRoundId: doc.currentRoundId || '',
+      players,
+      isOwner,
+      isDrawer,
+      canStartGame,
+      currentUserReady: !!(me && me.isReady),
+    });
+
+    // waiting: 重置回合状态
+    if (roomStatus === 'waiting') {
+      this.clearTimer();
+      this._lastEndAt = null;
+      this.stopRoundWatcher();
+      this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [] });
+    }
+
+    // playing: 启动回合监听 + 推断回合阶段
+    if (roomStatus === 'playing') {
+      this.startRoundWatcher(doc.currentRoundId);
+      // endAt 为空且回合已创建 → 出题阶段；endAt 存在 → 画画阶段（下面处理）
+      if (!doc.endAt && doc.currentRoundId) {
+        this.setData({ roundStatus: 'choosing' });
+      }
+    }
+
+    // 倒计时：endAt 变化时启动计时器
+    if (roomStatus === 'playing' && doc.endAt) {
+      if (doc.endAt !== this._lastEndAt) {
+        this._lastEndAt = doc.endAt;
+        this.setData({ roundStatus: 'drawing' });
+        const left = Math.max(0, Math.floor((doc.endAt - Date.now()) / 1000));
+        this.setData({ timeLeft: left });
+        this.startTimer(doc.endAt);
+      }
+    } else if (roomStatus === 'playing' && !doc.endAt) {
+      // 出题阶段 or 新回合开始，重置计时
+      this._lastEndAt = null;
+      this.clearTimer();
+      this.setData({ timeLeft: 0 });
+    }
+
+    // finished: 显示结算
+    if (roomStatus === 'finished') {
+      this.onGameFinished(players);
+    }
+
+    // 绘制画板
+    this.drawAllStrokes(doc.strokes || []);
+  },
+
+  /* ==================== 生命周期 ==================== */
+
   async onLoad(options) {
     const { roomCode, roomId } = options;
     if (!roomId) {
@@ -88,127 +165,114 @@ Page({
     this.setData({ roomId, roomCode, openid });
     this.initCanvas();
 
-    // 1. 先建 watcher（建立时立即推送快照）
+    // 1. watcher（主通道）
     this.roomWatcher = db.collection('room').doc(roomId).watch({
-      onChange: snapshot => this.onRoomSnapshot(snapshot),
+      onChange: snapshot => {
+        const doc = snapshot.docs && snapshot.docs[0];
+        if (doc) this.processRoomData(doc);
+      },
       onError: e => {
-        console.error('[room watch error]', e);
-        this.fetchRoomOnce();
+        console.error('[room watcher error]', e);
       }
     });
 
-    // 2. 主动拉一次，兜底 watcher 首次快照延迟
+    // 2. 主动拉一次
     await this.fetchRoomOnce();
 
-    // 3. 入房（幂等；房主 createRoom 时已写入，此处直接 skip）
+    // 3. 入房（幂等）
     try {
       await wx.cloud.callFunction({
         name: 'enterRoom',
         data: { roomCode, nickName: userInfo.nickname, avatarUrl: userInfo.avatarUrl }
       });
-      console.log('[onLoad] enterRoom 完成');
     } catch (e) {
-      console.error('[onLoad] enterRoom 失败:', e);
+      console.error('[enterRoom]', e);
     }
 
-    // 4. 再拉一次，确保玩家加入后房主端立即同步
+    // 4. 入房后再拉一次
     await this.fetchRoomOnce();
+
+    // 5. 轮询兜底（每3秒）
+    this._pollTimer = setInterval(() => this.fetchRoomOnce(), 3000);
   },
 
-  // 页面重新显示时补拉（处理后台切回前台场景）
   async onShow() {
-    if (this.data.roomId) {
-      await this.fetchRoomOnce();
-    }
+    if (this.data.roomId) await this.fetchRoomOnce();
   },
 
-  // 卸载生命周期函数
   onUnload() {
-    this.roomWatcher && this.roomWatcher.close();
-    this.roundWatcher && this.roundWatcher.close();
+    if (this.roomWatcher) this.roomWatcher.close();
+    this.stopRoundWatcher();
     this.clearTimer();
+    if (this._pollTimer) { clearInterval(this._pollTimer); this._pollTimer = null; }
   },
 
-  /* ================= 实时数据：房间快照 ================= */
-  onRoomSnapshot(snapshot) {
-    const doc = snapshot.docs[0];
-    if (!doc) return;
+  /* ==================== 回合监听 ==================== */
 
-    const openid = this.data.openid;
-    const players = doc.players || [];
-    const ownerOpenid = doc.ownerOpenid || this.data.ownerOpenid || ((players.length === 1 && players[0].openid) ? players[0].openid : '');
-    const roomStatus = doc.status || this.data.gameStatus || 'waiting';
-    const isOwner = !!(ownerOpenid && ownerOpenid === openid);
-    const isDrawer = !!(doc.currentDrawer && doc.currentDrawer === openid);
-    const me = players.find(p => p.openid === openid);
+  startRoundWatcher(roundId) {
+    if (!roundId || this._watchingRoundId === roundId) return;
+    this.stopRoundWatcher();
+    this._watchingRoundId = roundId;
 
-    // canStartGame: 房主 + 至少1名其他玩家 + 所有其他玩家已准备
-    const nonHostPlayers = players.filter(p => p.openid !== ownerOpenid);
-    const canStartGame = isOwner &&
-      nonHostPlayers.length > 0 &&
-      nonHostPlayers.every(p => !!p.isReady);
+    this.roundWatcher = db.collection('rounds').doc(roundId).watch({
+      onChange: snap => {
+        const round = snap.docs && snap.docs[0];
+        if (!round) return;
 
-    this.setData({
-      ownerOpenid,
-      maxPlayers: doc.maxPlayers,
-      roundTime: doc.roundTime,
-      totalRounds: doc.totalRounds,
-      gameStatus: roomStatus,
-      currentRound: doc.currentRoundIdx || 0,
-      currentDrawer: doc.currentDrawer || '',
-      currentRoundId: doc.currentRoundId || '',
-      players,
-      isOwner,
-      isDrawer,
-      canStartGame,
-      currentUserReady: !!(me && me.isReady),
+        // 同步回合状态
+        if (round.status && round.status !== this.data.roundStatus) {
+          this.setData({ roundStatus: round.status });
+        }
+
+        // 画手看词
+        if (this.data.isDrawer && round.word) {
+          this.setData({ drawerWord: round.word });
+        } else if (!this.data.isDrawer) {
+          this.setData({ drawerWord: '' });
+        }
+
+        // 猜词 → 消息列表
+        const players = this.data.players;
+        const messages = (round.guesses || []).map(g => {
+          const p = players.find(pl => pl.openid === g.openid);
+          const sender = p ? p.nickName : '玩家';
+          return g.isCorrect
+            ? { type: 'correct', sender, content: g.text }
+            : { type: 'chat', sender, content: g.text };
+        });
+        this.setData({ messages });
+      },
+      onError: e => console.error('[round watcher error]', e)
     });
+  },
 
-    // 当前画手昵称
-    const drawerPlayer = players.find(p => p.openid === doc.currentDrawer);
-    this.setData({ currentDrawerNickName: drawerPlayer ? drawerPlayer.nickName : '' });
-
-    // waiting 状态：重置所有回合相关状态
-    if (roomStatus === 'waiting') {
-      this.clearTimer();
-      this._lastEndAt = null;
-      this.refreshRoundWatcher('');
-      this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [] });
+  stopRoundWatcher() {
+    if (this.roundWatcher) {
+      this.roundWatcher.close();
+      this.roundWatcher = null;
     }
+    this._watchingRoundId = '';
+  },
 
-    // 回合监听
-    if (roomStatus === 'playing') {
-      this.refreshRoundWatcher(doc.currentRoundId);
-    }
+  /* ==================== 画布 ==================== */
 
-    // 倒计时：endAt 变化，画手提交词 → 启动计时 & 切 drawing
-    if (roomStatus === 'playing' && doc.endAt) {
-      if (doc.endAt !== this._lastEndAt) {
-        this._lastEndAt = doc.endAt;
-        this.setData({ roundStatus: 'drawing' });
-        const left = Math.max(0, Math.floor((doc.endAt - Date.now()) / 1000));
-        this.setData({ timeLeft: left });
-        this.startTimer(doc.endAt);
-        console.log('[onRoomSnapshot] 计时器启动 endAt=', doc.endAt);
-      }
-    } else if (roomStatus === 'playing' && !doc.endAt && this._lastEndAt) {
-      // 新回合开始（choosing），重置计时
-      this._lastEndAt = null;
-      this.clearTimer();
-      this.setData({ timeLeft: 0 });
-    }
+  initCanvas() {
+    const ctx = wx.createCanvasContext('drawingCanvas', this);
+    ctx.setLineCap('round');
+    ctx.setLineJoin('round');
+    ctx.setLineWidth(3);
+    ctx.setStrokeStyle('#000000');
+    this.setData({ canvasContext: ctx });
+  },
 
-    if (roomStatus === 'finished') {
-      this.endGame(doc.totalScore);
-    }
+  selectTool(e) {
+    this.setData({ selectedTool: e.currentTarget.dataset.tool });
+  },
 
-    this.drawAllStrokes(doc.strokes || []);
-
-    console.log('[onRoomSnapshot] status=', roomStatus,
-      '| isOwner=', isOwner,
-      '| openid=', openid,
-      '| ownerOpenid=', ownerOpenid,
-      '| players=', players.length);
+  clearCanvas() {
+    const ctx = this.data.canvasContext;
+    if (ctx) { ctx.clearRect(0, 0, 300, 200); ctx.draw(true); }
+    wx.cloud.callFunction({ name: 'clearStrokes', data: { roomId: this.data.roomId } });
   },
 
   drawAllStrokes(strokes) {
@@ -230,80 +294,8 @@ Page({
     ctx.draw(true);
   },
 
-  /* ================= 实时数据：回合快照 ================= */
-  refreshRoundWatcher(roundId) {
-    if (!roundId) {
-      if (this.roundWatcher) { this.roundWatcher.close(); this.roundWatcher = null; }
-      this._currentWatchRoundId = '';
-      return;
-    }
-    if (this._currentWatchRoundId === roundId) return;
-    if (this.roundWatcher) this.roundWatcher.close();
-    this._currentWatchRoundId = roundId;
+  /* ==================== 绘图事件 ==================== */
 
-    this.roundWatcher = db.collection('rounds').doc(roundId).watch({
-      onChange: snap => {
-        const round = snap.docs[0];
-        if (!round) return;
-
-        const { isDrawer, roundStatus } = this.data;
-
-        // 同步回合状态（only forward: choosing → drawing → ended）
-        if (round.status && round.status !== roundStatus) {
-          this.setData({ roundStatus: round.status });
-          console.log('[roundWatcher] roundStatus ->', round.status);
-        }
-
-        // 画手才能看词
-        if (isDrawer && round.word) {
-          if (round.word !== this.data.drawerWord) {
-            this.setData({ drawerWord: round.word });
-          }
-        } else if (!isDrawer) {
-          this.setData({ drawerWord: '' });
-        }
-
-        // 猜词转消息格式
-        const players = this.data.players;
-        const messages = (round.guesses || []).map(g => {
-          const p = players.find(pl => pl.openid === g.openid);
-          const sender = p ? p.nickName : '玩家';
-          return g.isCorrect
-            ? { type: 'correct', sender, content: g.text }
-            : { type: 'chat', sender, content: g.text };
-        });
-        this.setData({ messages });
-      },
-      onError: e => console.error('[round watch error]', e)
-    });
-  },
-
-  /* ================= 画布 ================= */
-  initCanvas() {
-    const ctx = wx.createCanvasContext('drawingCanvas', this);
-    ctx.setLineCap('round');
-    ctx.setLineJoin('round');
-    ctx.setLineWidth(3);
-    ctx.setStrokeStyle('#000000');
-    this.setData({ canvasContext: ctx });
-  },
-
-  selectTool(e) {
-    const tool = e.currentTarget.dataset.tool;
-    this.setData({ selectedTool: tool });
-    const ctx = this.data.canvasContext;
-    if (tool === 'pen') { ctx.setStrokeStyle('#000000'); ctx.setLineWidth(3); }
-    else if (tool === 'eraser') { ctx.setStrokeStyle('#ffffff'); ctx.setLineWidth(10); }
-  },
-
-  clearCanvas() {
-    const ctx = this.data.canvasContext;
-    ctx.clearRect(0, 0, 300, 200);
-    ctx.draw(true);
-    wx.cloud.callFunction({ name: 'clearStrokes', data: { roomId: this.data.roomId } });
-  },
-
-  /* ================= 绘图事件 ================= */
   onTouchStart(e) {
     if (!this.data.isDrawer || this.data.roundStatus !== 'drawing') return;
     const { x, y } = e.touches[0];
@@ -345,7 +337,8 @@ Page({
     this.setData({ drawingBuffer: [] });
   },
 
-  /* ================= 画手出题 ================= */
+  /* ==================== 画手出题 ==================== */
+
   onWordInput(e) {
     const wordInput = e.detail.value || '';
     this.setData({ wordInput, canSubmitWord: !!wordInput.trim() });
@@ -360,22 +353,21 @@ Page({
         name: 'submitWord',
         data: { roomId: this.data.roomId, roundId: this.data.currentRoundId, word }
       });
-      if (!result.success) {
-        wx.showToast({ title: result.errMsg || '提交失败', icon: 'none' });
-      } else {
-        // 本地直接切换，不等 watcher 回调
+      if (result.success) {
         this.setData({ wordInput: '', canSubmitWord: false, drawerWord: word, roundStatus: 'drawing' });
-        console.log('[submitWord] 已提交:', word);
+      } else {
+        wx.showToast({ title: result.errMsg || '提交失败', icon: 'none' });
       }
     } catch (e) {
-      console.error('[submitWord] error:', e);
+      console.error('[submitWord]', e);
       wx.showToast({ title: '提交失败', icon: 'none' });
     } finally {
       wx.hideLoading();
     }
   },
 
-  /* ================= 聊天 ================= */
+  /* ==================== 猜词 ==================== */
+
   onChatInput(e) {
     const chatInput = e.detail.value || '';
     this.setData({ chatInput, canSendMessage: !!chatInput.trim() });
@@ -391,146 +383,124 @@ Page({
         data: { roomCode: this.data.roomCode, text }
       });
     } catch (e) {
-      console.error('[sendMessage] error:', e);
+      console.error('[sendMessage]', e);
     }
   },
 
-  /* ================= 房主点击-开始游戏 ================= */
+  /* ==================== 准备（非房主） ==================== */
+
+  async handleReady() {
+    if (this.data.isOwner || this.data.gameStatus !== 'waiting' || this.data.currentUserReady) return;
+    try {
+      const { result } = await wx.cloud.callFunction({
+        name: 'setPlayerReady',
+        data: { roomId: this.data.roomId, openid: this.data.openid }
+      });
+      if (result && result.success) {
+        this.setData({ currentUserReady: true });
+        await this.fetchRoomOnce();
+      } else {
+        wx.showToast({ title: (result && result.errMsg) || '准备失败', icon: 'none' });
+      }
+    } catch (e) {
+      console.error('[handleReady]', e);
+    }
+  },
+
+  /* ==================== 开始游戏（房主） ==================== */
+
   async startGame() {
-    if (!this.data.isOwner) {
-      wx.showToast({ title: '只有房主才能开始', icon: 'none' });
-      return;
-    }
-    if (this.data.gameStatus !== 'waiting') return;
-    if (!this.data.canStartGame) {
-      wx.showToast({ title: '请等待所有玩家准备', icon: 'none' });
-      return;
-    }
+    if (!this.data.isOwner || this.data.gameStatus !== 'waiting' || !this.data.canStartGame) return;
+
     wx.showLoading({ title: '准备中' });
     try {
-      // 1. 房间状态 → playing
+      // 1. 切换房间状态
       const startRes = await wx.cloud.callFunction({
         name: 'startGame',
         data: { roomId: this.data.roomId }
       });
       if (!startRes.result.success) {
         wx.showToast({ title: startRes.result.errMsg || '开始失败', icon: 'none' });
-        wx.hideLoading();
         return;
       }
-      this.setData({ gameStatus: 'playing' });
 
-      // 2. 创建 games 记录（失败不阻塞）
-      try {
-        const createRes = await wx.cloud.callFunction({
-          name: 'createGame',
-          data: { roomId: this.data.roomId, roomCode: this.data.roomCode, players: this.data.players }
-        });
-        if (createRes.result && createRes.result.gameId) {
-          this.setData({ gameId: createRes.result.gameId });
-        }
-      } catch (e) {
-        console.warn('[startGame] createGame 失败，不阻塞:', e);
-      }
-
-      // 3. 开始第 1 回合
+      // 2. 开始第一回合
       const players = this.data.players;
-      if (!players.length) {
-        wx.showToast({ title: '房间玩家为空', icon: 'none' });
-        wx.hideLoading();
-        return;
-      }
       const firstDrawer = players[0].openid;
       const roundRes = await wx.cloud.callFunction({
         name: 'startRound',
         data: { roomId: this.data.roomId, roundIdx: 1, drawer: firstDrawer }
       });
-      const { roundId, drawer } = roundRes.result;
 
-      // 4. 直接更新本地状态，不等 watcher
-      const drawerPlayer = players.find(p => p.openid === drawer);
+      // 3. 直接设置本地状态，不等 watcher/轮询
+      const roundId = roundRes.result.roundId;
+      const drawerPlayer = players.find(p => p.openid === firstDrawer);
       this.setData({
+        gameStatus: 'playing',
         currentRoundId: roundId,
         currentRound: 1,
-        currentDrawer: drawer,
+        currentDrawer: firstDrawer,
         currentDrawerNickName: drawerPlayer ? drawerPlayer.nickName : '',
-        isDrawer: drawer === this.data.openid,
+        isDrawer: firstDrawer === this.data.openid,
         roundStatus: 'choosing',
       });
-      this._currentWatchRoundId = null; // 强制重建 watcher
-      this.refreshRoundWatcher(roundId);
-
-      console.log('[startGame] 开始，画手:', drawer, 'roundId:', roundId);
-      wx.hideLoading();
+      this.startRoundWatcher(roundId);
     } catch (e) {
+      console.error('[startGame]', e);
+      wx.showToast({ title: '开始失败', icon: 'none' });
+    } finally {
       wx.hideLoading();
-      console.error('[startGame] error:', e);
-      wx.showToast({ title: String(e.errMsg || e.message || '开始失败'), icon: 'none' });
     }
   },
 
-  /* ================= 倒计时 ================= */
+  /* ==================== 倒计时 ==================== */
+
   startTimer(endAt) {
     this.clearTimer();
-    this.timer = setInterval(() => {
+    this._gameTimer = setInterval(() => {
       const left = Math.max(0, Math.floor((endAt - Date.now()) / 1000));
       this.setData({ timeLeft: left });
       if (left <= 0) {
         this.clearTimer();
-        wx.showToast({ title: '时间到！', icon: 'none' });
+        // 房主负责触发结束回合
         if (this.data.isOwner) this.triggerEndRound();
       }
     }, 1000);
   },
 
   clearTimer() {
-    if (this.timer) { clearInterval(this.timer); this.timer = null; }
+    if (this._gameTimer) { clearInterval(this._gameTimer); this._gameTimer = null; }
   },
 
   async triggerEndRound() {
     const { roomId, currentRoundId } = this.data;
     if (!currentRoundId) return;
-    console.log('[triggerEndRound] roundId=', currentRoundId);
     try {
-      const { result } = await wx.cloud.callFunction({
+      await wx.cloud.callFunction({
         name: 'endRound',
         data: { roomId, roundId: currentRoundId }
       });
-      console.log('[triggerEndRound]', result);
     } catch (e) {
-      console.error('[triggerEndRound] error:', e);
+      console.error('[triggerEndRound]', e);
     }
   },
 
-  /* ================= 结束页 ================= */
-  endGame(totalScore) {
+  /* ==================== 游戏结束 ==================== */
+
+  onGameFinished(players) {
     this.clearTimer();
-    const players = this.data.players;
-    const arr = Object.entries(totalScore || {}).map(([oid, score]) => {
-      const p = players.find(pl => pl.openid === oid);
-      return { openid: oid, nickName: p ? p.nickName : '未知', score };
-    });
+    this.stopRoundWatcher();
+    const arr = (players || []).map(p => ({
+      openid: p.openid,
+      nickName: p.nickName,
+      score: p.score || 0
+    }));
     arr.sort((a, b) => b.score - a.score);
     this.setData({ finalScores: arr, showGameOver: true });
   },
 
-  /* ================= 导航 ================= */
+  /* ==================== 导航 ==================== */
+
   backToHome() { wx.navigateBack({ delta: 2 }); },
   playAgain() { this.backToHome(); },
-
-  /* ================= 准备（仅非房主） ================= */
-  async handleReady() {
-    if (this.data.isOwner) return;
-    if (this.data.gameStatus !== 'waiting') return;
-    if (this.data.currentUserReady) return;
-    const { openid, roomId } = this.data;
-    try {
-      await wx.cloud.callFunction({ name: 'setPlayerReady', data: { roomId, openid } });
-      this.setData({ currentUserReady: true });
-      await this.fetchRoomOnce();
-      console.log('[handleReady] 已准备');
-    } catch (e) {
-      console.error('[handleReady] error:', e);
-    }
-  },
 });

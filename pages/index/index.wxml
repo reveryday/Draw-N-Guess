@@ -8,21 +8,17 @@
 
   <!-- 登录 -->
   <view class="auth-section" wx:else>
-    <!-- 头像 -->
     <button class="btn-primary" open-type="chooseAvatar" bindchooseavatar="getAvatar">
       <image class="avatar avatar-large" src="{{avatarUrl}}"/>
     </button>
-    <!-- 昵称 -->
     <input class="nickname-input" type="nickname" placeholder="请输入昵称" value="{{nickName}}" maxlength="10" bindblur="getNickName"/>
-    <!-- 提交 -->
     <button class="btn-primary btn-login" bindtap="saveUserInfo">登录</button>
   </view>
 
   <!-- 主要功能区域 -->
   <view class="main-actions" wx:if="{{isLoggedIn}}">
-    <view class="action-card" bindtap="intoCreate">  <!-- 点击触发intoCreate函数 -->
-      <view class="action-icon">
-      </view>
+    <view class="action-card" bindtap="intoCreate">
+      <view class="action-icon"></view>
       <view class="action-content">
         <text class="action-title">创建房间</text>
         <text class="action-desc">邀请朋友一起玩</text>
@@ -31,21 +27,10 @@
     </view>
 
     <view class="action-card" bindtap="joinRoom">
-      <view class="action-icon">
-      </view>
+      <view class="action-icon"></view>
       <view class="action-content">
         <text class="action-title">加入房间</text>
         <text class="action-desc">输入房间号加入游戏</text>
-      </view>
-      <view class="action-arrow">></view>
-    </view>
-
-    <view class="action-card" bindtap="quickMatch">
-      <view class="action-icon">
-      </view>
-      <view class="action-content">
-        <text class="action-title">快速匹配</text>
-        <text class="action-desc">随机匹配在线玩家</text>
       </view>
       <view class="action-arrow">></view>
     </view>
@@ -57,7 +42,7 @@
   <view class="modal-content" catchtap="stopPropagation">
     <view class="modal-header">
       <text class="modal-title">加入房间</text>
-      <text class="modal-close" bindtap="hideJoinModal">×</text>
+      <text class="modal-close" bindtap="hideJoinModal">x</text>
     </view>
     <view class="modal-body">
       <view class="input-group">

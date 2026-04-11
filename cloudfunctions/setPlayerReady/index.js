@@ -2,7 +2,6 @@
 const cloud = require('wx-server-sdk');
 cloud.init();
 const db = cloud.database();
-const _ = db.command;
 
 exports.main = async (event) => {
   const { roomId, openid } = event;
@@ -11,14 +10,22 @@ exports.main = async (event) => {
   }
 
   try {
-    // ✅ 更新玩家准备状态 + 用云端时间强制触发 watch
+    // 1. 先读出当前房间文档
+    const roomRes = await db.collection('room').doc(roomId).get();
+    const room = roomRes.data;
+    if (!room) return { success: false, errMsg: '房间不存在' };
+
+    // 2. 在 JS 中修改 players 数组
+    const players = (room.players || []).map(p => ({
+      ...p,
+      isReady: p.openid === openid ? true : p.isReady
+    }));
+
+    // 3. 整体写回 + 用云端时间强制触发 watch
     const res = await db.collection('room').doc(roomId).update({
       data: {
-        players: _.map(item => ({
-          ...item,
-          isReady: item.openid === openid ? true : item.isReady
-        })),
-        updatedAt: db.serverDate()   // ⚡ 必须用这个，watch 才能触发
+        players,
+        updatedAt: db.serverDate()
       }
     });
 

@@ -38,7 +38,8 @@ exports.main = async (event) => {
       currentRoundId: '',
       endAt: null,
       createTime: new Date(),
-      updateTime: new Date()
+      updateTime: new Date(),
+      updatedAt: db.serverDate()
     }
   });
 
