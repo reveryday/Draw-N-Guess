@@ -8,7 +8,6 @@
     </view>
     <view class="game-status">
       <text class="round-info" wx:if="{{currentRound > 0}}">第{{currentRound}}/{{totalRounds}}轮</text>
-      <text class="drawer-info" wx:if="{{currentDrawerNickName && gameStatus === 'playing'}}">{{currentDrawerNickName}}在画</text>
     </view>
   </view>
 
@@ -17,38 +16,66 @@
     <!-- 等待阶段占位 -->
     <view class="canvas-placeholder" wx:if="{{gameStatus !== 'playing'}}">
       <text class="placeholder-text">等待游戏开始...</text>
+      <view class="canvas-placeholder-action">
+        <button
+          wx:if="{{!isOwner}}"
+          class="action-btn {{currentUserReady ? 'btn-ready-done' : 'btn-ready'}}"
+          bindtap="handleReady"
+          disabled="{{currentUserReady}}"
+        >{{currentUserReady ? '已准备，等待开始' : '点击准备'}}</button>
+        <button
+          wx:else
+          class="action-btn {{canStartGame ? 'btn-start' : 'btn-start-disabled'}}"
+          bindtap="startGame"
+          disabled="{{!canStartGame}}"
+        >{{canStartGame ? '开始游戏' : (players.length <= 1 ? '等待玩家加入...' : '等待玩家准备...')}}</button>
+      </view>
     </view>
 
     <!-- 出题阶段占位 -->
     <view class="canvas-placeholder" wx:elif="{{roundStatus === 'choosing'}}">
       <text class="placeholder-text" wx:if="{{isDrawer}}">请在下方输入本轮词条</text>
       <text class="placeholder-text" wx:else>等待 {{currentDrawerNickName}} 出题...</text>
+      <view class="canvas-placeholder-note">
+        <text wx:if="{{isDrawer}}">输入完成后会立即进入作画阶段</text>
+        <text wx:else>出题完成后将开始本轮作画</text>
+      </view>
     </view>
 
     <!-- 画画阶段：工具栏 -->
     <block wx:else>
-      <view class="drawer-word-hint" wx:if="{{isDrawer && drawerWord}}">
-        <text class="drawer-word-label">你的词：</text>
-        <text class="drawer-word-value">{{drawerWord}}</text>
-      </view>
-      <view class="canvas-header" wx:if="{{isDrawer}}">
-        <view class="canvas-tools">
-          <button class="tool-btn {{selectedTool === 'pen' ? 'active' : ''}}" bindtap="selectTool" data-tool="pen">笔</button>
-          <button class="tool-btn {{selectedTool === 'eraser' ? 'active' : ''}}" bindtap="selectTool" data-tool="eraser">擦</button>
-          <button class="clear-btn" bindtap="clearCanvas">清空</button>
+      <view class="canvas-meta">
+        <block wx:if="{{isDrawer}}">
+          <view class="canvas-header canvas-header-drawer">
+            <view class="drawer-word-hint">
+              <text class="drawer-word-label">你的词：</text>
+              <text class="drawer-word-value">{{drawerWord || '待出题'}}</text>
+            </view>
+            <view class="canvas-tools">
+              <button class="tool-btn {{selectedTool === 'pen' ? 'active' : ''}}" bindtap="selectTool" data-tool="pen">笔</button>
+              <button class="tool-btn {{selectedTool === 'eraser' ? 'active' : ''}}" bindtap="selectTool" data-tool="eraser">擦</button>
+              <button class="clear-btn" bindtap="clearCanvas">清空</button>
+            </view>
+          </view>
+        </block>
+        <view class="guesser-hint" wx:else>
+          <text>等待 {{currentDrawerNickName}} 作画，观察画面后输入你的猜测</text>
         </view>
       </view>
+      <view class="canvas-stage">
+        <canvas
+          class="drawing-canvas"
+          canvas-id="drawingCanvas"
+          width="{{canvasWidth}}"
+          height="{{canvasHeight}}"
+          bindtouchstart="onTouchStart"
+          bindtouchmove="onTouchMove"
+          bindtouchend="onTouchEnd"
+          disable-scroll="{{true}}"
+          style="pointer-events:{{isDrawer && roundStatus === 'drawing' ? 'auto' : 'none'}}"
+        ></canvas>
+      </view>
     </block>
-
-    <canvas
-      class="drawing-canvas"
-      canvas-id="drawingCanvas"
-      bindtouchstart="onTouchStart"
-      bindtouchmove="onTouchMove"
-      bindtouchend="onTouchEnd"
-      disable-scroll="{{true}}"
-      style="pointer-events:{{isDrawer && roundStatus === 'drawing' ? 'auto' : 'none'}}"
-    ></canvas>
   </view>
 
   <!-- 玩家头像区 -->
@@ -78,64 +105,6 @@
     </scroll-view>
   </view>
 
-  <!-- 底部操作区 -->
-  <view class="bottom-section">
-
-    <!-- 等待阶段 -->
-    <block wx:if="{{gameStatus === 'waiting'}}">
-      <!-- 非房主：准备按钮 -->
-      <button
-        wx:if="{{!isOwner}}"
-        class="action-btn {{currentUserReady ? 'btn-ready-done' : 'btn-ready'}}"
-        bindtap="handleReady"
-        disabled="{{currentUserReady}}"
-      >{{currentUserReady ? '已准备，等待开始' : '点击准备'}}</button>
-
-      <!-- 房主：开始游戏 -->
-      <button
-        wx:else
-        class="action-btn {{canStartGame ? 'btn-start' : 'btn-start-disabled'}}"
-        bindtap="startGame"
-        disabled="{{!canStartGame}}"
-      >{{canStartGame ? '开始游戏' : (players.length <= 1 ? '等待玩家加入...' : '等待玩家准备...')}}</button>
-    </block>
-
-    <!-- 出题阶段提示 -->
-    <block wx:elif="{{gameStatus === 'playing' && roundStatus === 'choosing'}}">
-      <view class="action-tip-center">
-        <text wx:if="{{isDrawer}}">请在弹窗中输入本轮词条</text>
-        <text wx:else>等待 {{currentDrawerNickName}} 出题中...</text>
-      </view>
-    </block>
-
-    <!-- 画画阶段：猜手输入 -->
-    <block wx:elif="{{gameStatus === 'playing' && roundStatus === 'drawing' && !isDrawer}}">
-      <view class="word-input-row">
-        <input
-          class="word-input"
-          placeholder="输入你的猜测..."
-          bindinput="onChatInput"
-          bindconfirm="sendMessage"
-          value="{{chatInput}}"
-          maxlength="20"
-        />
-        <button
-          class="action-btn btn-send"
-          bindtap="sendMessage"
-          disabled="{{!canSendMessage}}"
-        >发送</button>
-      </view>
-    </block>
-
-    <!-- 画画阶段：画手提示 -->
-    <block wx:elif="{{gameStatus === 'playing' && roundStatus === 'drawing' && isDrawer}}">
-      <view class="action-tip-center">
-        <text>专心画画吧，等大家来猜！</text>
-      </view>
-    </block>
-
-  </view>
-
   <!-- 画手出词弹窗 -->
   <view class="word-modal-mask" wx:if="{{gameStatus === 'playing' && roundStatus === 'choosing' && isDrawer}}">
     <view class="word-modal">
@@ -160,30 +129,76 @@
     </view>
   </view>
 
-  <!-- 消息列表（画画阶段显示） -->
-  <view class="chat-section" wx:if="{{gameStatus === 'playing' && roundStatus === 'drawing'}}">
+  <!-- 消息列表 -->
+  <view class="chat-section" wx:if="{{!showGameOver}}">
     <scroll-view class="chat-messages" scroll-y="true">
-      <view class="message-item {{message.type}}" wx:for="{{messages}}" wx:for-item="message" wx:key="index">
-        <view class="message-content" wx:if="{{message.type === 'chat'}}">
-          <text class="message-sender">{{message.sender}}: </text>
-          <text class="message-text">{{message.content}}</text>
+      <block wx:if="{{gameStatus === 'playing' && roundStatus === 'drawing'}}">
+        <view class="message-item {{message.type}}" wx:for="{{messages}}" wx:for-item="message" wx:key="index">
+          <view class="message-content" wx:if="{{message.type === 'chat'}}">
+            <text class="message-sender">{{message.sender}}: </text>
+            <text class="message-text">{{message.content}}</text>
+          </view>
+          <view class="message-content" wx:elif="{{message.type === 'correct'}}">
+            <text class="correct-message">{{message.sender}} 猜对了！</text>
+          </view>
         </view>
-        <view class="message-content" wx:elif="{{message.type === 'correct'}}">
-          <text class="correct-message">{{message.sender}} 猜对了！</text>
+      </block>
+      <view class="chat-empty-state" wx:else>
+        <text class="chat-empty-title" wx:if="{{gameStatus === 'waiting'}}">聊天区已就位</text>
+        <text class="chat-empty-title" wx:elif="{{roundStatus === 'choosing'}}">等待本轮开始</text>
+        <text class="chat-empty-desc" wx:if="{{gameStatus === 'waiting'}}">玩家准备完成后，这里会显示实时猜词消息</text>
+        <text class="chat-empty-desc" wx:elif="{{roundStatus === 'choosing'}}">出题完成后，聊天区会切换为实时猜词</text>
+        <text class="chat-empty-desc" wx:else>本区域将在作画阶段展示实时消息</text>
+      </view>
+      <view class="message-item system" wx:if="{{gameStatus === 'playing' && roundStatus === 'drawing' && !messages.length}}">
+        <view class="message-content">
+          <text class="system-message">猜词消息会显示在这里</text>
         </view>
       </view>
     </scroll-view>
+    <view class="chat-input-bar">
+      <input
+        class="chat-guess-input {{(isDrawer || !(gameStatus === 'playing' && roundStatus === 'drawing')) ? 'is-disabled' : ''}}"
+        placeholder="{{gameStatus !== 'playing' ? '游戏开始后开放猜词输入' : (roundStatus === 'choosing' ? '出题完成后开放猜词输入' : (isDrawer ? '画手不可输入猜词' : '输入你的猜测...'))}}"
+        bindinput="onChatInput"
+        bindconfirm="sendMessage"
+        value="{{chatInput}}"
+        maxlength="20"
+        disabled="{{isDrawer || !(gameStatus === 'playing' && roundStatus === 'drawing')}}"
+      />
+      <button
+        class="chat-send-btn {{(isDrawer || !(gameStatus === 'playing' && roundStatus === 'drawing')) ? 'is-disabled' : ''}}"
+        bindtap="sendMessage"
+        disabled="{{isDrawer || !canSendMessage || !(gameStatus === 'playing' && roundStatus === 'drawing')}}"
+      >发送</button>
+    </view>
   </view>
 
   <!-- 游戏结束弹窗 -->
   <view class="game-over-modal" wx:if="{{showGameOver}}">
     <view class="modal-content">
-      <text class="modal-title">游戏结束</text>
+      <view class="result-hero">
+        <text class="result-badge">本局结算</text>
+        <text class="modal-title">游戏结束</text>
+        <view class="winner-card" wx:if="{{finalScores.length}}">
+          <text class="winner-crown">🏆</text>
+          <text class="winner-rank">冠军</text>
+          <text class="winner-name">{{finalScores[0].nickName}}</text>
+          <text class="winner-score">{{finalScores[0].score}}分</text>
+        </view>
+      </view>
       <view class="final-scores">
         <view class="score-item" wx:for="{{finalScores}}" wx:key="openid">
-          <text class="rank">第{{index + 1}}名</text>
-          <text class="player-name">{{item.nickName}}</text>
-          <text class="player-score">{{item.score}}分</text>
+          <view class="score-left">
+            <view class="rank-badge rank-{{index}}">
+              <text class="rank">{{index + 1}}</text>
+            </view>
+            <view class="score-meta">
+              <text class="score-name">{{item.nickName}}</text>
+              <text class="score-rank-text">第{{index + 1}}名</text>
+            </view>
+          </view>
+          <text class="score-points">{{item.score}}分</text>
         </view>
       </view>
       <view class="modal-actions">

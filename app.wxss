@@ -4,33 +4,36 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.1), transparent 26%),
+    radial-gradient(circle at top right, rgba(255, 215, 255, 0.14), transparent 30%),
+    linear-gradient(180deg, #7566d9 0%, #6658c8 38%, #5749b4 100%);
   padding: 60rpx 40rpx;
   box-sizing: border-box;
 }
 
 /* 通用样式 */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
   color: white;
-  border-radius: 50rpx;
+  border-radius: 999rpx;
   padding: 20rpx 40rpx;
   border: none;
   font-size: 32rpx;
   font-weight: 600;
-  box-shadow: 0 10rpx 30rpx rgba(102, 126, 234, 0.3);
+  box-shadow: 0 14rpx 28rpx rgba(90, 75, 192, 0.22);
 }
 
 .btn-primary:active {
   transform: translateY(2rpx);
-  box-shadow: 0 5rpx 15rpx rgba(102, 126, 234, 0.3);
+  box-shadow: 0 8rpx 18rpx rgba(90, 75, 192, 0.2);
 }
 
 .btn-secondary {
-  background: white;
-  color: #667eea;
-  border: 2rpx solid #667eea;
-  border-radius: 50rpx;
+  background: #f8f6ff;
+  color: #675a90;
+  border: 1rpx solid #e1dbf7;
+  border-radius: 999rpx;
   padding: 20rpx 40rpx;
   font-size: 32rpx;
   font-weight: 600;
@@ -42,10 +45,10 @@
 
 .card {
   background: white;
-  border-radius: 20rpx;
+  border-radius: 28rpx;
   padding: 40rpx;
   margin: 15rpx;
-  box-shadow: 0 10rpx 40rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 22rpx 56rpx rgba(53, 31, 121, 0.18);
   width: 100%;
   box-sizing: border-box;
 }
@@ -57,7 +60,7 @@
 .input-label {
   display: block;
   font-size: 28rpx;
-  color: #333;
+  color: #53457f;
   margin-bottom: 10rpx;
   font-weight: 600;
 }
@@ -65,14 +68,15 @@
 .input-field {
   width: 100%;
   padding: 20rpx;
-  border: 2rpx solid #e0e0e0;
-  border-radius: 10rpx;
+  border: 2rpx solid #e0d7ff;
+  border-radius: 18rpx;
   font-size: 30rpx;
-  background: #fafafa;
+  background: #f8f6ff;
+  color: #3b315a;
 }
 
 .input-field:focus {
-  border-color: #667eea;
+  border-color: #7566d9;
   background: white;
 }
 
@@ -101,7 +105,7 @@
 }
 
 .text-primary {
-  color: #667eea;
+  color: #6b59c9;
 }
 
 .text-secondary {
@@ -149,7 +153,7 @@
   width: 80rpx;
   height: 80rpx;
   border-radius: 50%;
-  border: 2rpx solid #e0e0e0;
+  border: 3rpx solid rgba(255, 255, 255, 0.75);
 }
 
 .avatar-large {
@@ -226,7 +230,7 @@
   width: 40rpx;
   height: 40rpx;
   border: 4rpx solid #f3f3f3;
-  border-top: 4rpx solid #667eea;
+  border-top: 4rpx solid #7566d9;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -239,7 +243,7 @@
 /* 消息提示 */
 .message {
   padding: 20rpx 30rpx;
-  border-radius: 10rpx;
+  border-radius: 18rpx;
   margin: 20rpx 0;
   font-size: 28rpx;
 }
@@ -257,13 +261,13 @@
 }
 
 .message-warning {
-  background: #fff3cd;
-  color: #856404;
-  border: 1rpx solid #ffeaa7;
+  background: #f5f0ff;
+  color: #6e5fb0;
+  border: 1rpx solid rgba(117, 102, 217, 0.18);
 }
 
 .message-info {
-  background: #d1ecf1;
-  color: #0c5460;
-  border: 1rpx solid #bee5eb;
+  background: #f6f2ff;
+  color: #6558a2;
+  border: 1rpx solid rgba(117, 102, 217, 0.14);
 }

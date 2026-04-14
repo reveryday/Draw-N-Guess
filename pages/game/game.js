@@ -32,6 +32,8 @@ Page({
 
     // 画布
     canvasContext: null,
+    canvasWidth: 300,
+    canvasHeight: 200,
     selectedTool: 'pen',
     isDrawing: false,
     drawingBuffer: [],
@@ -100,6 +102,10 @@ Page({
       isDrawer,
       canStartGame,
       currentUserReady: !!(me && me.isReady),
+    }, () => {
+      // The canvas area changes height when placeholders/toolbars appear or disappear.
+      // Re-measure after state updates so the drawable area matches the visible panel.
+      this.syncCanvasSize();
     });
 
     // waiting: 重置回合状态
@@ -107,7 +113,7 @@ Page({
       this.clearTimer();
       this._lastEndAt = null;
       this.stopRoundWatcher();
-      this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [] });
+      this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [] }, () => this.syncCanvasSize());
     }
 
     // playing: 启动回合监听 + 推断回合阶段
@@ -115,7 +121,7 @@ Page({
       this.startRoundWatcher(doc.currentRoundId);
       // endAt 为空且回合已创建 → 出题阶段；endAt 存在 → 画画阶段（下面处理）
       if (!doc.endAt && doc.currentRoundId) {
-        this.setData({ roundStatus: 'choosing' });
+        this.setData({ roundStatus: 'choosing' }, () => this.syncCanvasSize());
       }
     }
 
@@ -123,7 +129,7 @@ Page({
     if (roomStatus === 'playing' && doc.endAt) {
       if (doc.endAt !== this._lastEndAt) {
         this._lastEndAt = doc.endAt;
-        this.setData({ roundStatus: 'drawing' });
+        this.setData({ roundStatus: 'drawing' }, () => this.syncCanvasSize());
         const left = Math.max(0, Math.floor((doc.endAt - Date.now()) / 1000));
         this.setData({ timeLeft: left });
         this.startTimer(doc.endAt);
@@ -132,7 +138,7 @@ Page({
       // 出题阶段 or 新回合开始，重置计时
       this._lastEndAt = null;
       this.clearTimer();
-      this.setData({ timeLeft: 0 });
+      this.setData({ timeLeft: 0 }, () => this.syncCanvasSize());
     }
 
     // finished: 显示结算
@@ -200,6 +206,10 @@ Page({
     if (this.data.roomId) await this.fetchRoomOnce();
   },
 
+  onReady() {
+    this.syncCanvasSize();
+  },
+
   onUnload() {
     if (this.roomWatcher) this.roomWatcher.close();
     this.stopRoundWatcher();
@@ -221,14 +231,14 @@ Page({
 
         // 同步回合状态
         if (round.status && round.status !== this.data.roundStatus) {
-          this.setData({ roundStatus: round.status });
+          this.setData({ roundStatus: round.status }, () => this.syncCanvasSize());
         }
 
         // 画手看词
         if (this.data.isDrawer && round.word) {
-          this.setData({ drawerWord: round.word });
+          this.setData({ drawerWord: round.word }, () => this.syncCanvasSize());
         } else if (!this.data.isDrawer) {
-          this.setData({ drawerWord: '' });
+          this.setData({ drawerWord: '' }, () => this.syncCanvasSize());
         }
 
         // 猜词 → 消息列表
@@ -263,6 +273,31 @@ Page({
     ctx.setLineWidth(3);
     ctx.setStrokeStyle('#000000');
     this.setData({ canvasContext: ctx });
+    this.syncCanvasSize();
+  },
+
+  syncCanvasSize() {
+    const query = wx.createSelectorQuery().in(this);
+    query.select('.drawing-canvas').boundingClientRect();
+    query.exec((res) => {
+      const rect = res && res[0];
+      if (!rect || !rect.width || !rect.height) return;
+
+      const canvasWidth = Math.round(rect.width);
+      const canvasHeight = Math.round(rect.height);
+      const changed = canvasWidth !== this.data.canvasWidth || canvasHeight !== this.data.canvasHeight;
+
+      if (!changed) return;
+
+      this.setData({ canvasWidth, canvasHeight }, () => {
+        const ctx = this.data.canvasContext;
+        if (ctx) {
+          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+          ctx.draw(true);
+        }
+        this.fetchRoomOnce();
+      });
+    });
   },
 
   selectTool(e) {
@@ -271,16 +306,29 @@ Page({
 
   clearCanvas() {
     const ctx = this.data.canvasContext;
-    if (ctx) { ctx.clearRect(0, 0, 300, 200); ctx.draw(true); }
+    const { canvasWidth, canvasHeight } = this.data;
+    if (ctx) { ctx.clearRect(0, 0, canvasWidth, canvasHeight); ctx.draw(true); }
     wx.cloud.callFunction({ name: 'clearStrokes', data: { roomId: this.data.roomId } });
   },
 
   drawAllStrokes(strokes) {
     const ctx = this.data.canvasContext;
-    if (!ctx || !strokes || !strokes.length) return;
-    ctx.clearRect(0, 0, 300, 200);
+    const { canvasWidth, canvasHeight } = this.data;
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    if (!strokes || !strokes.length) {
+      ctx.draw(true);
+      return;
+    }
     strokes.forEach(stroke => {
-      if (!stroke.points || stroke.points.length < 2) return;
+      if (!stroke.points || !stroke.points.length) return;
+      if (stroke.points.length === 1) {
+        const point = stroke.points[0];
+        const size = Math.max(3, stroke.width || 3);
+        ctx.setFillStyle(stroke.color || '#000000');
+        ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
+        return;
+      }
       ctx.setStrokeStyle(stroke.color);
       ctx.setLineWidth(stroke.width);
       ctx.setLineCap('round');
@@ -299,6 +347,14 @@ Page({
   onTouchStart(e) {
     if (!this.data.isDrawer || this.data.roundStatus !== 'drawing') return;
     const { x, y } = e.touches[0];
+    const ctx = this.data.canvasContext;
+    const isPen = this.data.selectedTool === 'pen';
+    if (ctx) {
+      const size = isPen ? 3 : 10;
+      ctx.setFillStyle(isPen ? '#000000' : '#ffffff');
+      ctx.fillRect(x - size / 2, y - size / 2, size, size);
+      ctx.draw(true);
+    }
     this.setData({ isDrawing: true, drawingBuffer: [{ x, y }] });
   },
 
@@ -354,7 +410,10 @@ Page({
         data: { roomId: this.data.roomId, roundId: this.data.currentRoundId, word }
       });
       if (result.success) {
-        this.setData({ wordInput: '', canSubmitWord: false, drawerWord: word, roundStatus: 'drawing' });
+        this.setData(
+          { wordInput: '', canSubmitWord: false, drawerWord: word, roundStatus: 'drawing' },
+          () => this.syncCanvasSize()
+        );
       } else {
         wx.showToast({ title: result.errMsg || '提交失败', icon: 'none' });
       }
@@ -426,7 +485,7 @@ Page({
 
       // 2. 开始第一回合
       const players = this.data.players;
-      const firstDrawer = players[0].openid;
+      const firstDrawer = players[Math.floor(Math.random() * players.length)].openid;
       const roundRes = await wx.cloud.callFunction({
         name: 'startRound',
         data: { roomId: this.data.roomId, roundIdx: 1, drawer: firstDrawer }

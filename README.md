@@ -38,7 +38,7 @@
 
 ```
 1. 登录
-   └─ 选择头像 + 输入昵称 → 注册/更新用户信息
+   └─ 选择头像 + 输入昵称 → 注册用户信息
 
 2. 创建或加入房间
    ├─ 创建房间：设置人数上限(2-8)、每轮时间(60/90/120s)、总轮数(3-10)
@@ -69,43 +69,43 @@
 
 ### users
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| _id | string | 用户 openid |
-| nickname | string | 昵称 |
-| avatarUrl | string | 头像地址 |
-| totalGames | number | 总局数 |
-| winGames | number | 胜场数 |
+| 字段       | 类型   | 说明        |
+| ---------- | ------ | ----------- |
+| _id        | string | 用户 openid |
+| nickname   | string | 昵称        |
+| avatarUrl  | string | 头像地址    |
+| totalGames | number | 总局数      |
+| winGames   | number | 胜场数      |
 
 ### room
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| roomCode | string | 6 位房间号 |
-| ownerOpenid | string | 房主 openid |
-| status | string | `waiting` / `playing` / `finished` |
-| players | array | `[{openid, nickName, avatarUrl, score, isReady, hasGuessed}]` |
-| maxPlayers | number | 最大人数 |
-| roundTime | number | 每轮时长（秒） |
-| totalRounds | number | 总轮数 |
-| currentDrawer | string | 当前画手 openid |
-| currentRoundIdx | number | 当前轮次（从 1 开始） |
-| currentRoundId | string | 当前回合文档 `_id` |
-| strokes | array | 画笔数据 `[{color, width, points:[{x,y}]}]` |
-| endAt | number | 本轮倒计时结束时间戳 |
-| updatedAt | serverDate | 最后更新时间（触发 watch 的关键字段） |
+| 字段            | 类型       | 说明                                                            |
+| --------------- | ---------- | --------------------------------------------------------------- |
+| roomCode        | string     | 6 位房间号                                                      |
+| ownerOpenid     | string     | 房主 openid                                                     |
+| status          | string     | `waiting` / `playing` / `finished`                        |
+| players         | array      | `[{openid, nickName, avatarUrl, score, isReady, hasGuessed}]` |
+| maxPlayers      | number     | 最大人数                                                        |
+| roundTime       | number     | 每轮时长（秒）                                                  |
+| totalRounds     | number     | 总轮数                                                          |
+| currentDrawer   | string     | 当前画手 openid                                                 |
+| currentRoundIdx | number     | 当前轮次（从 1 开始）                                           |
+| currentRoundId  | string     | 当前回合文档 `_id`                                            |
+| strokes         | array      | 画笔数据 `[{color, width, points:[{x,y}]}]`                   |
+| endAt           | number     | 本轮倒计时结束时间戳                                            |
+| updatedAt       | serverDate | 最后更新时间（触发 watch 的关键字段）                           |
 
 ### rounds
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| roomId | string | 所属房间 `_id` |
-| roundIdx | number | 轮次序号 |
-| drawer | string | 画手 openid |
-| word | string | 本轮词条（仅画手可见） |
-| status | string | `choosing` / `drawing` / `ended` |
-| guesses | array | `[{openid, text, isCorrect, timestamp}]` |
-| scores | object | 本轮得分 `{openid: number}` |
+| 字段     | 类型   | 说明                                       |
+| -------- | ------ | ------------------------------------------ |
+| roomId   | string | 所属房间 `_id`                           |
+| roundIdx | number | 轮次序号                                   |
+| drawer   | string | 画手 openid                                |
+| word     | string | 本轮词条（仅画手可见）                     |
+| status   | string | `choosing` / `drawing` / `ended`     |
+| guesses  | array  | `[{openid, text, isCorrect, timestamp}]` |
+| scores   | object | 本轮得分 `{openid: number}`              |
 
 ## 实时同步机制
 

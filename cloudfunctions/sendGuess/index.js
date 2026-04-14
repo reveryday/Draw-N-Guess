@@ -44,6 +44,19 @@ exports.main = async (event) => {
     await db.collection('room').doc(room._id).update({
       data: { players: updatedPlayers, updatedAt: db.serverDate() }
     });
+
+    const allGuessersCorrect = updatedPlayers
+      .filter(p => p.openid !== round.drawer)
+      .every(p => !!p.hasGuessed);
+
+    if (allGuessersCorrect) {
+      console.log('[sendGuess] 所有猜手已猜对，提前结束回合:', round._id);
+      await cloud.callFunction({
+        name: 'endRound',
+        data: { roomId: room._id, roundId: round._id }
+      });
+    }
+
     console.log('[sendGuess] 猜中！openid=', OPENID);
   }
 

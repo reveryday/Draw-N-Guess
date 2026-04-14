@@ -1,5 +1,5 @@
 .main-actions {
-  margin-bottom: 40rpx;
+  margin-bottom: 28rpx;
   width: 100%;
   max-width: 600rpx;
   padding: 0 20rpx;
@@ -8,18 +8,19 @@
 
 .action-card {
   background: white;
-  border-radius: 20rpx;
+  border-radius: 28rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
   display: flex;
   align-items: center;
-  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.1);
+  border: 1rpx solid rgba(255, 255, 255, 0.52);
+  box-shadow: 0 22rpx 56rpx rgba(53, 31, 121, 0.18);
   transition: all 0.3s ease;
 }
 
 .action-card:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 5rpx 15rpx rgba(0, 0, 0, 0.1);
+  transform: translateY(2rpx) scale(0.995);
+  box-shadow: 0 14rpx 30rpx rgba(53, 31, 121, 0.14);
 }
 
 .action-icon {
@@ -29,8 +30,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 15rpx;
+  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  border-radius: 22rpx;
+  color: #fff;
+  font-size: 40rpx;
+  font-weight: 700;
 }
 
 .action-icon image {
@@ -46,19 +50,19 @@
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: #43356f;
   margin-bottom: 5rpx;
 }
 
 .action-desc {
   display: block;
   font-size: 26rpx;
-  color: #666;
+  color: #857caa;
 }
 
 .action-arrow {
   font-size: 32rpx;
-  color: #ccc;
+  color: #b8b1d8;
   font-weight: bold;
 }
 
@@ -66,15 +70,24 @@
 .auth-section {
   text-align: center;
   margin-bottom: 40rpx;
+  width: 100%;
+  max-width: 600rpx;
+  background: #ffffff;
+  border-radius: 28rpx;
+  padding: 40rpx 36rpx;
+  box-sizing: border-box;
+  box-shadow: 0 22rpx 56rpx rgba(53, 31, 121, 0.18);
 }
 
 .user-info {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20rpx;
-  padding: 30rpx;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 28rpx;
+  padding: 34rpx 42rpx;
   margin-bottom: 40rpx;
   text-align: center;
   backdrop-filter: blur(10rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 22rpx 48rpx rgba(53, 31, 121, 0.16);
 }
 
 .username {
@@ -90,16 +103,17 @@
   height: 88rpx;
   padding: 0 0rpx 0 0rpx;
   font-size: 32rpx;
-  border: 2rpx solid #e0e0e0;
-  border-radius: 12rpx;
-  background: #fafafa;
+  border: 2rpx solid #e0d7ff;
+  border-radius: 18rpx;
+  background: #f8f6ff;
   transition: border-color 0.2s;
   margin: 40rpx auto 0;
   text-align: center;
+  color: #43356f;
 }
 
 .nickname-input:focus {
-  border-color: #07c160;
+  border-color: #7566d9;
   background: #fff;
 }
 
@@ -108,7 +122,25 @@
 }
 
 .btn-login {
-  margin-top: 40rpx;   /* 可根据视觉微调 40~80rpx */
+  margin-top: 32rpx;
+  width: 100%;
+}
+
+.avatar-picker {
+  width: 148rpx;
+  height: 148rpx;
+  padding: 0;
+  border: none;
+  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 18rpx 32rpx rgba(90, 75, 192, 0.22);
+}
+
+.avatar-picker::after {
+  border: none;
 }
 
 /* 模态框 */
@@ -118,7 +150,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(8, 4, 28, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,15 +159,16 @@
 
 .modal-content {
   background: white;
-  border-radius: 20rpx;
+  border-radius: 28rpx;
   width: 85%;
   max-width: 90%;
   overflow: hidden;
+  box-shadow: 0 28rpx 70rpx rgba(0, 0, 0, 0.28);
 }
 
 .modal-header {
   padding: 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid #f0ebff;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -144,17 +177,22 @@
 .modal-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #333;
+  color: #43356f;
 }
 
 .modal-close {
   font-size: 40rpx;
-  color: #999;
+  color: #a9a2c8;
   line-height: 1;
 }
 
 .modal-body {
   padding: 30rpx;
+}
+
+.modal-body .btn-primary {
+  width: 100%;
+  margin-top: 12rpx;
 }
 
 /* 加载覆盖层 */

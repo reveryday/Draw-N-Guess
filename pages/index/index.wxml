@@ -1,5 +1,4 @@
 <view class="container">
-
   <!-- 用户信息 -->
   <view class="user-info" wx:if="{{isLoggedIn}}">
     <image class="avatar avatar-large" src="{{avatarUrl}}"></image>
@@ -8,7 +7,7 @@
 
   <!-- 登录 -->
   <view class="auth-section" wx:else>
-    <button class="btn-primary" open-type="chooseAvatar" bindchooseavatar="getAvatar">
+    <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="getAvatar">
       <image class="avatar avatar-large" src="{{avatarUrl}}"/>
     </button>
     <input class="nickname-input" type="nickname" placeholder="请输入昵称" value="{{nickName}}" maxlength="10" bindblur="getNickName"/>
@@ -18,7 +17,7 @@
   <!-- 主要功能区域 -->
   <view class="main-actions" wx:if="{{isLoggedIn}}">
     <view class="action-card" bindtap="intoCreate">
-      <view class="action-icon"></view>
+      <view class="action-icon">+</view>
       <view class="action-content">
         <text class="action-title">创建房间</text>
         <text class="action-desc">邀请朋友一起玩</text>
@@ -27,7 +26,7 @@
     </view>
 
     <view class="action-card" bindtap="joinRoom">
-      <view class="action-icon"></view>
+      <view class="action-icon">#</view>
       <view class="action-content">
         <text class="action-title">加入房间</text>
         <text class="action-desc">输入房间号加入游戏</text>

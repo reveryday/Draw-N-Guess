@@ -1,10 +1,16 @@
 <view class="container">
   <view class="card">
-    <view class="card-title">
-      <text>房间设置</text>
+    <view class="card-hero">
+      <text class="card-eyebrow">新房间</text>
+      <view class="card-title">
+        <text>设置这一局怎么玩</text>
+      </view>
     </view>
     <view class="setting-item">
-      <text class="setting-label">最大人数</text>
+      <view class="setting-head">
+        <text class="setting-label">最大人数</text>
+        <text class="setting-value">{{maxPlayers}}人</text>
+      </view>
       <view class="number-selector">
         <button class="number-btn" bindtap="changeMaxPlayers" data-action="minus" disabled="{{maxPlayers <= 2}}">-</button>
         <text class="number-value">{{maxPlayers}}</text>
@@ -12,7 +18,10 @@
       </view>
     </view>
     <view class="setting-item">
-      <text class="setting-label">每轮时间</text>
+      <view class="setting-head">
+        <text class="setting-label">每轮时间</text>
+        <text class="setting-value">{{roundTime}}秒</text>
+      </view>
       <view class="time-selector">
         <view class="time-option {{roundTime === 60 ? 'active' : ''}}" bindtap="setRoundTime" data-time="60">
           <text>1分钟</text>
@@ -26,18 +35,20 @@
       </view>
     </view>
     <view class="setting-item">
-      <text class="setting-label">游戏轮数</text>
+      <view class="setting-head">
+        <text class="setting-label">游戏轮数</text>
+        <text class="setting-value">{{totalRounds}}轮</text>
+      </view>
       <view class="number-selector">
         <button class="number-btn" bindtap="changeRounds" data-action="minus" disabled="{{totalRounds <= 3}}">-</button>
         <text class="number-value">{{totalRounds}}</text>
         <button class="number-btn" bindtap="changeRounds" data-action="plus" disabled="{{totalRounds >= 10}}">+</button>
       </view>
     </view>
-  </view>
-
-  <view class="create-section">
-    <button class="btn-primary create-btn" bindtap="intoRoom" disabled="{{loading}}">
-      {{loading ? '创建中...' : '创建房间'}}
-    </button>
+    <view class="create-section">
+      <button class="btn-primary create-btn" bindtap="intoRoom" disabled="{{loading}}">
+        {{loading ? '创建中...' : '创建房间'}}
+      </button>
+    </view>
   </view>
 </view>

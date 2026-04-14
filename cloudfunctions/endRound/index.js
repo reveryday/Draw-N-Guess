@@ -20,7 +20,7 @@ exports.main = async (event) => {
     return { success: true, msg: '回合已结束' };
   }
 
-  // 2. 结算本轮分数（猜中者 +10，画手每人 +5）
+  // 2. 结算本轮分数（猜中者 +10，画手每人 +3；无人猜中画手 -5）
   const correctGuesses = (round.guesses || []).filter(g => g.isCorrect);
   const roundScores = {};
   const seen = new Set();
@@ -31,7 +31,9 @@ exports.main = async (event) => {
     }
   });
   if (seen.size > 0) {
-    roundScores[round.drawer] = (roundScores[round.drawer] || 0) + seen.size * 5;
+    roundScores[round.drawer] = (roundScores[round.drawer] || 0) + seen.size * 3;
+  } else {
+    roundScores[round.drawer] = (roundScores[round.drawer] || 0) - 5;
   }
 
   // 3. 标记回合结束
@@ -56,6 +58,7 @@ exports.main = async (event) => {
         status: 'finished',
         players: updatedPlayers,
         endAt: null,
+        strokes: [],
         updatedAt: db.serverDate()
       }
     });
