@@ -4,7 +4,7 @@
   <view class="game-header">
     <view class="game-info">
       <text class="room-id">房间: {{roomCode}}</text>
-      <text class="timer" wx:if="{{timeLeft > 0}}">{{timeLeft}}s</text>
+      <text class="timer {{timeLeft <= 10 ? 'is-urgent' : ''}}" wx:if="{{timeLeft > 0}}">{{timeLeft}}s</text>
     </view>
     <view class="game-status">
       <text class="round-info" wx:if="{{currentRound > 0}}">第{{currentRound}}/{{totalRounds}}轮</text>
@@ -29,6 +29,7 @@
           bindtap="startGame"
           disabled="{{!canStartGame}}"
         >{{canStartGame ? '开始游戏' : (players.length <= 1 ? '等待玩家加入...' : '等待玩家准备...')}}</button>
+        <button class="btn-secondary invite-btn" open-type="share">邀请好友</button>
       </view>
     </view>
 
@@ -52,9 +53,9 @@
               <text class="drawer-word-value">{{drawerWord || '待出题'}}</text>
             </view>
             <view class="canvas-tools">
-              <button class="tool-btn {{selectedTool === 'pen' ? 'active' : ''}}" bindtap="selectTool" data-tool="pen">笔</button>
-              <button class="tool-btn {{selectedTool === 'eraser' ? 'active' : ''}}" bindtap="selectTool" data-tool="eraser">擦</button>
-              <button class="clear-btn" bindtap="clearCanvas">清空</button>
+              <button class="tool-btn tool-pen {{selectedTool === 'pen' ? 'active' : ''}}" bindtap="selectTool" data-tool="pen">🖊️</button>
+              <button class="tool-btn tool-eraser {{selectedTool === 'eraser' ? 'active' : ''}}" bindtap="selectTool" data-tool="eraser">🩹</button>
+              <button class="clear-btn tool-clear" bindtap="clearCanvas">🗑️</button>
             </view>
           </view>
         </block>
@@ -82,7 +83,7 @@
   <view class="players-section">
     <scroll-view class="players-list" scroll-x="true">
       <view
-        class="player-item {{gameStatus === 'playing' && item.openid === currentDrawer ? 'is-drawer' : ''}}"
+        class="player-item {{gameStatus === 'playing' && item.openid === currentDrawer ? 'is-drawer' : ''}} {{gameStatus === 'playing' && item.hasGuessed ? 'has-guessed' : ''}}"
         wx:for="{{players}}"
         wx:key="openid"
       >
@@ -95,9 +96,10 @@
           </view>
           <!-- 游戏中标记 -->
           <view class="avatar-badge" wx:elif="{{gameStatus === 'playing'}}">
-            <text wx:if="{{item.openid === currentDrawer}}">画</text>
+            <text wx:if="{{item.openid === currentDrawer}}">🖌️</text>
             <text class="badge-check" wx:elif="{{item.hasGuessed}}">对</text>
           </view>
+          <text class="score-float" wx:if="{{gameStatus === 'playing' && item.hasGuessed}}">+10</text>
         </view>
         <text class="player-name">{{item.nickName}}</text>
         <text class="player-score" wx:if="{{gameStatus === 'playing'}}">{{item.score || 0}}分</text>
@@ -106,7 +108,7 @@
   </view>
 
   <!-- 画手出词弹窗 -->
-  <view class="word-modal-mask" wx:if="{{gameStatus === 'playing' && roundStatus === 'choosing' && isDrawer}}">
+  <view class="word-modal-mask" wx:if="{{gameStatus === 'playing' && roundStatus === 'choosing' && isDrawer && !showRoundReveal}}">
     <view class="word-modal">
       <text class="word-modal-title">请输入本轮词条</text>
       <text class="word-modal-tip">只有你自己能看到这个词</text>
@@ -159,7 +161,7 @@
     <view class="chat-input-bar">
       <input
         class="chat-guess-input {{(isDrawer || !(gameStatus === 'playing' && roundStatus === 'drawing')) ? 'is-disabled' : ''}}"
-        placeholder="{{gameStatus !== 'playing' ? '游戏开始后开放猜词输入' : (roundStatus === 'choosing' ? '出题完成后开放猜词输入' : (isDrawer ? '画手不可输入猜词' : '输入你的猜测...'))}}"
+        placeholder="{{gameStatus !== 'playing' ? '🔒 等待开始' : (roundStatus === 'choosing' ? '🔒 等待出题' : (isDrawer ? '🔒 画手不可猜' : '输入你的猜测...'))}}"
         bindinput="onChatInput"
         bindconfirm="sendMessage"
         value="{{chatInput}}"
@@ -171,6 +173,16 @@
         bindtap="sendMessage"
         disabled="{{isDrawer || !canSendMessage || !(gameStatus === 'playing' && roundStatus === 'drawing')}}"
       >发送</button>
+    </view>
+  </view>
+
+  <view class="round-reveal-mask" wx:if="{{showRoundReveal && !showGameOver}}">
+    <view class="round-reveal-card">
+      <text class="round-reveal-badge">上一轮揭晓</text>
+      <text class="round-reveal-title" wx:if="{{roundRevealRound > 0}}">第{{roundRevealRound}}轮</text>
+      <text class="round-reveal-word">{{roundRevealWord}}</text>
+      <text class="round-reveal-drawer">画手：{{roundRevealDrawer}}</text>
+      <button class="round-reveal-btn" bindtap="hideRoundReveal">知道了</button>
     </view>
   </view>
 

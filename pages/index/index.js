@@ -6,7 +6,9 @@ Page({
   data: {
     avatarUrl: defaultAvatarUrl, // 默认头像
     nickname: null,
-    isLoggedIn: false
+    isLoggedIn: false,
+    invitedRoomCode: '',
+    invitedRoomId: ''
   },
 
   // ********* 头像 *********
@@ -73,15 +75,26 @@ Page({
     this.joinRoomById(roomId)
   },
 
-  onLoad() {
+  onLoad(options = {}) {
+    const invitedRoomCode = options.inviteRoomCode || '';
+    const invitedRoomId = options.inviteRoomId || '';
+
     // 如果全局已有登录信息，直接显示
     if (getApp().globalData.userInfo) {
       this.setData({
         avatarUrl: getApp().globalData.userInfo.avatarUrl,
         nickname : getApp().globalData.userInfo.nickname,
-        isLoggedIn: true
+        isLoggedIn: true,
+        invitedRoomCode,
+        invitedRoomId
       });
+      if (invitedRoomCode) {
+        this.joinRoomById(invitedRoomCode, invitedRoomId);
+      }
+      return;
     }
+
+    this.setData({ invitedRoomCode, invitedRoomId });
   },
 
   // 创建房间
@@ -112,6 +125,10 @@ Page({
       wx.setStorageSync('userInfo', { avatarUrl, nickname, _openid: openid }); // 保存到本地缓存
       this.setData({ isLoggedIn: true });
       wx.showToast({ title: '登录成功' });
+
+      if (this.data.invitedRoomCode) {
+        this.joinRoomById(this.data.invitedRoomCode, this.data.invitedRoomId);
+      }
     } catch (err) {
       console.error(err);
       wx.showToast({ title: '登录失败', icon: 'none' });
@@ -121,7 +138,7 @@ Page({
   },
 
   // 通过短码加入房间（调用云函数 enterRoom）
-  async joinRoomById(roomCode) {
+  async joinRoomById(roomCode, invitedRoomId = '') {
     try {
       const userInfo = getApp().globalData.userInfo || {};
       // console.log(userInfo);
@@ -132,7 +149,9 @@ Page({
 
       if (result && result.success) {
         this.setData({ showJoinModal: false, inputRoomId: '' });
-        wx.navigateTo({ url: `/pages/game/game?roomCode=${roomCode}&roomId=${result.roomId}` });
+        const roomId = result.roomId || invitedRoomId;
+        this.setData({ invitedRoomCode: '', invitedRoomId: '' });
+        wx.navigateTo({ url: `/pages/game/game?roomCode=${roomCode}&roomId=${roomId}` });
       } else {
         wx.showToast({ title: (result && result.errMsg) || '加入失败', icon: 'none' });
       }

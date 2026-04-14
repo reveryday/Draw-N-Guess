@@ -47,6 +47,15 @@ exports.main = async (event) => {
     score: (p.score || 0) + (roundScores[p.openid] || 0),
     hasGuessed: false
   }));
+  const drawerPlayer = (room.players || []).find(p => p.openid === round.drawer);
+  const lastRoundSummary = {
+    roundId,
+    roundIdx: room.currentRoundIdx,
+    word: round.word || '',
+    drawer: round.drawer,
+    drawerNickName: drawerPlayer ? drawerPlayer.nickName : '',
+    revealedAt: Date.now()
+  };
 
   const currentRoundIdx = room.currentRoundIdx;
   const totalRounds = room.totalRounds;
@@ -59,6 +68,7 @@ exports.main = async (event) => {
         players: updatedPlayers,
         endAt: null,
         strokes: [],
+        lastRoundSummary,
         updatedAt: db.serverDate()
       }
     });
@@ -93,6 +103,7 @@ exports.main = async (event) => {
       endAt: null,
       strokes: [],
       players: updatedPlayers,
+      lastRoundSummary,
       updatedAt: db.serverDate()
     }
   });

@@ -4,35 +4,32 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.1), transparent 26%),
-    radial-gradient(circle at top right, rgba(255, 215, 255, 0.14), transparent 30%),
-    linear-gradient(180deg, #7566d9 0%, #6658c8 38%, #5749b4 100%);
+  background: #ffd188;
   padding: 60rpx 40rpx;
   box-sizing: border-box;
 }
 
 /* 通用样式 */
 .btn-primary {
-  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
   color: white;
   border-radius: 999rpx;
   padding: 20rpx 40rpx;
   border: none;
   font-size: 32rpx;
   font-weight: 600;
-  box-shadow: 0 14rpx 28rpx rgba(90, 75, 192, 0.22);
+  box-shadow: 0 14rpx 28rpx rgba(255, 111, 97, 0.28);
 }
 
 .btn-primary:active {
   transform: translateY(2rpx);
-  box-shadow: 0 8rpx 18rpx rgba(90, 75, 192, 0.2);
+  box-shadow: 0 8rpx 18rpx rgba(255, 111, 97, 0.22);
 }
 
 .btn-secondary {
-  background: #f8f6ff;
-  color: #675a90;
-  border: 1rpx solid #e1dbf7;
+  background: #fff8ec;
+  color: #5a385f;
+  border: 1rpx solid #f3d3b7;
   border-radius: 999rpx;
   padding: 20rpx 40rpx;
   font-size: 32rpx;
@@ -44,11 +41,11 @@
 }
 
 .card {
-  background: white;
+  background: #fffdf8;
   border-radius: 28rpx;
   padding: 40rpx;
   margin: 15rpx;
-  box-shadow: 0 22rpx 56rpx rgba(53, 31, 121, 0.18);
+  box-shadow: 0 24rpx 60rpx rgba(176, 116, 57, 0.2);
   width: 100%;
   box-sizing: border-box;
 }
@@ -60,7 +57,7 @@
 .input-label {
   display: block;
   font-size: 28rpx;
-  color: #53457f;
+  color: #4b2e59;
   margin-bottom: 10rpx;
   font-weight: 600;
 }
@@ -68,15 +65,15 @@
 .input-field {
   width: 100%;
   padding: 20rpx;
-  border: 2rpx solid #e0d7ff;
+  border: 2rpx solid #f2d6bf;
   border-radius: 18rpx;
   font-size: 30rpx;
-  background: #f8f6ff;
-  color: #3b315a;
+  background: #fff8ec;
+  color: #4b2e59;
 }
 
 .input-field:focus {
-  border-color: #7566d9;
+  border-color: #ff7a59;
   background: white;
 }
 
@@ -105,7 +102,7 @@
 }
 
 .text-primary {
-  color: #6b59c9;
+  color: #ff7a59;
 }
 
 .text-secondary {
@@ -230,7 +227,7 @@
   width: 40rpx;
   height: 40rpx;
   border: 4rpx solid #f3f3f3;
-  border-top: 4rpx solid #7566d9;
+  border-top: 4rpx solid #ff7a59;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -261,13 +258,13 @@
 }
 
 .message-warning {
-  background: #f5f0ff;
-  color: #6e5fb0;
-  border: 1rpx solid rgba(117, 102, 217, 0.18);
+  background: #fff2d9;
+  color: #8f5a18;
+  border: 1rpx solid rgba(255, 179, 71, 0.24);
 }
 
 .message-info {
-  background: #f6f2ff;
-  color: #6558a2;
-  border: 1rpx solid rgba(117, 102, 217, 0.14);
+  background: #fff7ec;
+  color: #7a627f;
+  border: 1rpx solid rgba(255, 122, 89, 0.14);
 }

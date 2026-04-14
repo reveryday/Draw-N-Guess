@@ -1,10 +1,7 @@
 /* 游戏容器 */
 .game-container {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.1), transparent 26%),
-    radial-gradient(circle at top right, rgba(255, 215, 255, 0.14), transparent 30%),
-    linear-gradient(180deg, #7566d9 0%, #6658c8 38%, #5749b4 100%);
+  background: #ffd188;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -13,16 +10,16 @@
 /* 游戏头部 */
 .game-header {
   margin: 18rpx 20rpx 10rpx;
-  padding: 16rpx 22rpx;
+  padding: 10rpx 2rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 10;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1rpx solid rgba(255, 255, 255, 0.14);
-  border-radius: 24rpx;
-  box-shadow: 0 16rpx 40rpx rgba(37, 18, 93, 0.22);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .game-info {
@@ -34,11 +31,11 @@
 
 .room-id {
   font-size: 24rpx;
-  color: #f8f6ff;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1rpx solid rgba(255, 255, 255, 0.1);
-  border-radius: 999rpx;
-  padding: 10rpx 18rpx;
+  color: #4b2e59;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   letter-spacing: 1rpx;
 }
 
@@ -57,12 +54,29 @@
   line-height: 60rpx;
   padding: 0 18rpx;
   font-size: 28rpx;
-  color: #432980;
+  color: #7a3f1b;
   font-weight: 700;
-  background: linear-gradient(135deg, #ffe29f 0%, #ffc76d 100%);
+  background: linear-gradient(135deg, #fff7e8 0%, #ffe7bf 100%);
+  border: 1rpx solid rgba(255, 179, 71, 0.3);
   border-radius: 999rpx;
   text-align: center;
-  box-shadow: 0 10rpx 24rpx rgba(255, 185, 93, 0.28);
+  box-shadow: 0 10rpx 24rpx rgba(181, 116, 43, 0.18);
+}
+
+.timer.is-urgent {
+  color: #ffffff;
+  background: linear-gradient(135deg, #ff6b6b 0%, #e43f5a 100%);
+  box-shadow: 0 12rpx 26rpx rgba(228, 63, 90, 0.34);
+  animation: timerPulse 0.9s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
 }
 
 .game-status {
@@ -75,7 +89,7 @@
 
 .round-info {
   font-size: 26rpx;
-  color: #e8e2ff;
+  color: #6d546b;
   letter-spacing: 1rpx;
   font-weight: 600;
   text-align: right;
@@ -84,14 +98,14 @@
 /* 画板区域 */
 .canvas-section {
   flex-shrink: 0;
-  background: #ffffff;
+  background: #fffdf8;
   margin: 10rpx 20rpx 10rpx 20rpx;
   border-radius: 28rpx;
   padding: 18rpx;
   display: flex;
   flex-direction: column;
   border: 1rpx solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 22rpx 56rpx rgba(53, 31, 121, 0.18);
+  box-shadow: 0 24rpx 60rpx rgba(176, 116, 57, 0.2);
   height: 37vh;
   overflow: hidden;
 }
@@ -121,10 +135,10 @@
   display: flex;
   gap: 10rpx;
   align-items: center;
-  background: #f4f0ff;
-  border-radius: 999rpx;
-  padding: 6rpx;
-  box-shadow: inset 0 0 0 1rpx rgba(103, 84, 196, 0.08);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   flex-shrink: 0;
 }
 
@@ -134,7 +148,7 @@
   border-radius: 999rpx;
   border: none;
   background: rgba(255, 255, 255, 0.72);
-  color: #6c56c7;
+  color: #5a385f;
   font-size: 22rpx;
   font-weight: 600;
   display: flex;
@@ -144,10 +158,26 @@
   padding: 0 14rpx;
 }
 
-.tool-btn.active {
-  background: linear-gradient(135deg, #7566d9 0%, #5b4dc0 100%);
+.tool-pen {
+  background: #dff7ea;
+  color: #2f8c63;
+}
+
+.tool-pen.active {
+  background: linear-gradient(135deg, #7fd1ae 0%, #39b980 100%);
   color: white;
-  box-shadow: 0 8rpx 20rpx rgba(91, 77, 192, 0.24);
+  box-shadow: 0 8rpx 20rpx rgba(57, 185, 128, 0.24);
+}
+
+.tool-eraser {
+  background: #e5f1ff;
+  color: #4d83c2;
+}
+
+.tool-eraser.active {
+  background: linear-gradient(135deg, #a9d6ff 0%, #5ba4e6 100%);
+  color: white;
+  box-shadow: 0 8rpx 20rpx rgba(91, 164, 230, 0.24);
 }
 
 .clear-btn {
@@ -164,6 +194,11 @@
   box-shadow: 0 10rpx 18rpx rgba(239, 107, 122, 0.18);
 }
 
+.tool-clear {
+  background: linear-gradient(135deg, #ff9a7a 0%, #ff6f61 100%);
+  box-shadow: 0 10rpx 18rpx rgba(255, 111, 97, 0.2);
+}
+
 .canvas-stage {
   flex: 1;
   min-height: 0;
@@ -174,10 +209,10 @@
   width: 100%;
   height: 100%;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(252, 250, 255, 1));
-  border: 3rpx solid #e5dcff;
+    linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(255, 250, 241, 1));
+  border: 3rpx solid #f3d9bc;
   border-radius: 24rpx;
-  box-shadow: inset 0 0 0 8rpx rgba(122, 103, 217, 0.05);
+  box-shadow: inset 0 0 0 8rpx rgba(255, 179, 71, 0.06);
 }
 
 /* 用户头像区域 */
@@ -204,8 +239,8 @@
   border-radius: 18rpx;
   min-width: 120rpx;
   position: relative;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 253, 248, 0.5);
+  border: 1rpx solid rgba(255, 255, 255, 0.36);
   backdrop-filter: blur(10rpx);
 }
 
@@ -214,9 +249,30 @@
 }
 
 .player-item.is-drawer {
-  background: rgba(255, 233, 171, 0.2);
-  border: 2rpx solid rgba(255, 221, 126, 0.9);
-  box-shadow: 0 12rpx 22rpx rgba(57, 34, 134, 0.2);
+  background: rgba(255, 211, 136, 0.35);
+  border: 2rpx solid rgba(255, 179, 71, 0.88);
+  box-shadow: 0 12rpx 22rpx rgba(221, 137, 59, 0.18);
+}
+
+.player-item.has-guessed {
+  background: linear-gradient(180deg, rgba(255, 239, 168, 0.42) 0%, rgba(255, 216, 98, 0.24) 100%);
+  border-color: rgba(255, 204, 71, 0.82);
+  box-shadow: 0 0 0 2rpx rgba(255, 225, 133, 0.18), 0 12rpx 26rpx rgba(255, 198, 74, 0.22);
+  animation: guessedPulse 1.1s ease-out 1;
+}
+
+@keyframes guessedPulse {
+  0% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(255, 214, 107, 0.45);
+  }
+  60% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 12rpx rgba(255, 214, 107, 0);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .player-avatar {
@@ -237,14 +293,14 @@
 
 .player-name {
   font-size: 22rpx;
-  color: #ffffff;
+  color: #4b2e59;
   font-weight: 600;
   text-align: center;
 }
 
 .player-score {
   font-size: 20rpx;
-  color: rgba(255, 255, 255, 0.82);
+  color: #7a627f;
   text-align: center;
 }
 
@@ -262,14 +318,14 @@
 
 /* 聊天室区域 - 独立区域 */
 .chat-section {
-  background: #ffffff;
+  background: #fffdf8;
   margin: 0 20rpx 20rpx 20rpx;
   border-radius: 24rpx;
   padding: 18rpx 18rpx 16rpx;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 18rpx 40rpx rgba(53, 31, 121, 0.18);
+  box-shadow: 0 20rpx 48rpx rgba(176, 116, 57, 0.18);
   min-height: 30vh;
   overflow: hidden;
 }
@@ -294,52 +350,56 @@
 
 .chat-empty-title {
   font-size: 30rpx;
-  color: #6e60b4;
+  color: #4b2e59;
   font-weight: 700;
 }
 
 .chat-empty-desc {
   font-size: 24rpx;
-  color: #9a90c1;
+  color: #7a627f;
 }
 
 .message-item {
-  margin-bottom: 14rpx;
-  padding: 12rpx 16rpx;
+  margin-bottom: 10rpx;
+  padding: 10rpx 14rpx;
   border-radius: 16rpx;
 }
 
 .message-item.chat {
-  background: #f7f5ff;
-  border: 1rpx solid rgba(103, 84, 196, 0.08);
+  background: #fff5e8;
+  border: 1rpx solid rgba(255, 172, 124, 0.16);
 }
 
 .message-item.system {
-  background: #e8f2ff;
+  background: #e8f7ff;
   text-align: center;
+  border: 1rpx solid rgba(91, 164, 230, 0.14);
 }
 
 .message-item.correct {
   background: linear-gradient(135deg, #e6fff1 0%, #f0fff6 100%);
   text-align: center;
   border: 1rpx solid rgba(55, 148, 92, 0.18);
+  box-shadow: 0 10rpx 18rpx rgba(57, 185, 128, 0.12);
 }
 
 .message-content {
   display: flex;
-  flex-direction: column;
-  gap: 5rpx;
+  flex-direction: row;
+  align-items: center;
+  gap: 6rpx;
+  flex-wrap: wrap;
 }
 
 .message-sender {
   font-size: 22rpx;
-  color: #6b59c9;
+  color: #ff7a59;
   font-weight: 600;
 }
 
 .message-text {
-  font-size: 26rpx;
-  color: #3f355f;
+  font-size: 24rpx;
+  color: #4b2e59;
   line-height: 1.4;
 }
 
@@ -350,7 +410,7 @@
 }
 
 .correct-message {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: #23844f;
   font-weight: 700;
 }
@@ -369,29 +429,29 @@
   gap: 16rpx;
   padding-top: 16rpx;
   margin-top: 8rpx;
-  border-top: 1rpx solid rgba(103, 84, 196, 0.1);
+  border-top: 1rpx solid rgba(255, 122, 89, 0.12);
 }
 
 .chat-guess-input {
   flex: 1;
   height: 72rpx;
   padding: 0 26rpx;
-  border: 1rpx solid #e0d7ff;
+  border: 1rpx solid #f2d6bf;
   border-radius: 36rpx;
-  background: #f8f6ff;
+  background: #fff8ec;
   font-size: 28rpx;
-  color: #3b315a;
+  color: #4b2e59;
 }
 
 .chat-guess-input:focus {
-  border-color: #7566d9;
+  border-color: #ff7a59;
   background: #ffffff;
 }
 
 .chat-guess-input.is-disabled {
-  color: #9aa3af;
-  background: #f1f3f6;
-  border-color: #e5e7eb;
+  color: #8e94a8;
+  background: #f3f4f8;
+  border-color: #e6e9f0;
 }
 
 .chat-send-btn {
@@ -401,11 +461,11 @@
   height: 72rpx;
   line-height: 72rpx;
   border-radius: 36rpx;
-  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
   color: white;
   font-size: 28rpx;
   font-weight: 600;
-  box-shadow: 0 12rpx 20rpx rgba(90, 75, 192, 0.22);
+  box-shadow: 0 12rpx 20rpx rgba(255, 111, 97, 0.22);
 }
 
 .chat-send-btn[disabled] {
@@ -418,6 +478,78 @@
   color: #f8f9fb;
 }
 
+.round-reveal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(34, 18, 11, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 920;
+  pointer-events: auto;
+}
+
+.round-reveal-card {
+  min-width: 440rpx;
+  max-width: 76%;
+  background: #fffdf8;
+  border-radius: 28rpx;
+  padding: 28rpx 30rpx 26rpx;
+  text-align: center;
+  box-shadow: 0 24rpx 60rpx rgba(176, 116, 57, 0.22);
+  border: 1rpx solid rgba(255, 255, 255, 0.7);
+}
+
+.round-reveal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  background: #fff1df;
+  color: #ff7a59;
+  font-size: 22rpx;
+  font-weight: 700;
+  margin-bottom: 14rpx;
+}
+
+.round-reveal-title {
+  display: block;
+  font-size: 24rpx;
+  color: #7a627f;
+}
+
+.round-reveal-word {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 42rpx;
+  line-height: 1.15;
+  color: #4b2e59;
+  font-weight: 800;
+}
+
+.round-reveal-drawer {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #98756e;
+}
+
+.round-reveal-btn {
+  margin-top: 22rpx;
+  min-width: 220rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  border-radius: 999rpx;
+  border: none;
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  box-shadow: 0 12rpx 24rpx rgba(255, 111, 97, 0.22);
+}
+
 .chat-input {
   flex: 1;
   padding: 15rpx 20rpx;
@@ -428,13 +560,13 @@
 }
 
 .chat-input:focus {
-  border-color: #667eea;
+  border-color: #ff7a59;
   background: white;
 }
 
 .send-btn {
   padding: 15rpx 25rpx;
-  background: #667eea;
+  background: #ff7a59;
   color: white;
   border: none;
   border-radius: 25rpx;
@@ -494,8 +626,8 @@
   min-height: 44rpx;
   padding: 0 18rpx;
   border-radius: 999rpx;
-  background: #f4f0ff;
-  color: #6b59c9;
+  background: #fff1df;
+  color: #ff7a59;
   font-size: 22rpx;
   font-weight: 700;
   letter-spacing: 1rpx;
@@ -505,7 +637,7 @@
 .modal-title {
   font-size: 36rpx;
   font-weight: 700;
-  color: #43356f;
+  color: #4b2e59;
   text-align: center;
   margin-bottom: 22rpx;
 }
@@ -513,10 +645,10 @@
 .winner-card {
   padding: 28rpx 24rpx 24rpx;
   border-radius: 24rpx;
-  background: linear-gradient(180deg, #fff8eb 0%, #fff2c8 100%);
-  border: 1rpx solid rgba(240, 196, 95, 0.38);
+  background: linear-gradient(180deg, #fff7d7 0%, #ffe49d 100%);
+  border: 1rpx solid rgba(240, 196, 95, 0.42);
   text-align: center;
-  box-shadow: 0 18rpx 34rpx rgba(217, 177, 78, 0.16);
+  box-shadow: 0 18rpx 34rpx rgba(217, 177, 78, 0.2);
 }
 
 .winner-crown {
@@ -562,8 +694,8 @@
   align-items: center;
   padding: 18rpx 20rpx;
   border-radius: 20rpx;
-  background: #faf8ff;
-  border: 1rpx solid #eee8ff;
+  background: #fff8ec;
+  border: 1rpx solid #f4dec5;
 }
 
 .score-left {
@@ -579,25 +711,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #ece7ff 0%, #e1d8ff 100%);
+  background: linear-gradient(135deg, #ffeed6 0%, #ffe3bf 100%);
   flex-shrink: 0;
 }
 
 .rank-0 {
-  background: linear-gradient(135deg, #ffe7a5 0%, #ffd56a 100%);
+  background: linear-gradient(135deg, #ffe7a5 0%, #ffc94f 100%);
 }
 
 .rank-1 {
-  background: linear-gradient(135deg, #eef1f7 0%, #dbe1ee 100%);
+  background: linear-gradient(135deg, #dff0ff 0%, #b9daf2 100%);
 }
 
 .rank-2 {
-  background: linear-gradient(135deg, #f2ddd2 0%, #e4b494 100%);
+  background: linear-gradient(135deg, #ffdccc 0%, #f0b28f 100%);
 }
 
 .rank {
   font-size: 28rpx;
-  color: #574793;
+  color: #4b2e59;
   font-weight: 600;
 }
 
@@ -609,18 +741,18 @@
 
 .score-name {
   font-size: 30rpx;
-  color: #43356f;
+  color: #4b2e59;
   font-weight: 700;
 }
 
 .score-rank-text {
   font-size: 22rpx;
-  color: #9a90c1;
+  color: #7a627f;
 }
 
 .score-points {
   font-size: 30rpx;
-  color: #6b59c9;
+  color: #ff7a59;
   font-weight: 700;
 }
 
@@ -632,9 +764,9 @@
 .btn-secondary {
   flex: 1;
   padding: 20rpx;
-  background: #f8f6ff;
-  color: #675a90;
-  border: 1rpx solid #e1dbf7;
+  background: #fff8ec;
+  color: #5a385f;
+  border: 1rpx solid #f3d3b7;
   border-radius: 18rpx;
   font-size: 28rpx;
   font-weight: 600;
@@ -644,7 +776,7 @@
 .btn-primary {
   flex: 1;
   padding: 20rpx;
-  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
   color: white;
   border: none;
   border-radius: 18rpx;
@@ -691,7 +823,7 @@
   width: 100%;
   height: 80rpx;
   line-height: 80rpx;
-  background: #667eea;
+  background: #ff7a59;
   color: white;
   font-size: 32rpx;
   font-weight: 600;
@@ -738,15 +870,15 @@
 .word-input {
   flex: 1;
   padding: 20rpx 25rpx;
-  border: 2rpx solid #667eea;
+  border: 2rpx solid #ff7a59;
   border-radius: 15rpx;
   font-size: 30rpx;
-  background: #f8f9ff;
+  background: #fff8ec;
 }
 
 .submit-word-btn {
   padding: 20rpx 35rpx;
-  background: #667eea;
+  background: #ff7a59;
   color: white;
   border: none;
   border-radius: 15rpx;
@@ -775,8 +907,8 @@
 
 /* 画手词条提示 */
 .drawer-word-hint {
-  background: linear-gradient(135deg, #f5f0ff 0%, #eee7ff 100%);
-  border: 1rpx solid rgba(117, 102, 217, 0.18);
+  background: linear-gradient(135deg, #ecf9dd 0%, #d5f0b8 100%);
+  border: 1rpx solid rgba(110, 174, 85, 0.24);
   border-radius: 16rpx;
   padding: 12rpx 18rpx;
   display: flex;
@@ -789,14 +921,14 @@
 
 .drawer-word-label {
   font-size: 24rpx;
-  color: #6e5fb0;
+  color: #5f8b46;
   flex-shrink: 0;
 }
 
 .drawer-word-value {
   font-size: 28rpx;
   font-weight: 700;
-  color: #4c3f80;
+  color: #4b2e59;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -804,8 +936,8 @@
 
 /* 猜手提示 */
 .guesser-hint {
-  background: linear-gradient(135deg, #f6f2ff 0%, #f0ebff 100%);
-  border: 1rpx solid rgba(117, 102, 217, 0.14);
+  background: linear-gradient(135deg, #fff7ec 0%, #fff1df 100%);
+  border: 1rpx solid rgba(255, 122, 89, 0.12);
   border-radius: 16rpx;
   padding: 15rpx 20rpx;
   margin-bottom: 12rpx;
@@ -818,7 +950,7 @@
 
 .guesser-hint text {
   font-size: 26rpx;
-  color: #6558a2;
+  color: #7a627f;
 }
 
 /* ===== 画布占位 ===== */
@@ -833,18 +965,25 @@
 }
 .placeholder-text {
   font-size: 30rpx;
-  color: #8a80b6;
+  color: #7a627f;
   text-align: center;
 }
 
 .canvas-placeholder-action {
   width: 100%;
   max-width: 460rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.invite-btn {
+  width: 100%;
 }
 
 .canvas-placeholder-note text {
   font-size: 24rpx;
-  color: #a095c8;
+  color: #98756e;
   text-align: center;
 }
 
@@ -861,6 +1000,33 @@
   border-radius: 50%;
   display: block;
   margin-bottom: 0;
+}
+
+.score-float {
+  position: absolute;
+  top: -34rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24rpx;
+  color: #ffb347;
+  font-weight: 800;
+  text-shadow: 0 4rpx 10rpx rgba(94, 58, 0, 0.28);
+  pointer-events: none;
+  animation: scoreFloatUp 1s ease-out 1;
+}
+
+@keyframes scoreFloatUp {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10rpx) scale(0.9);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-18rpx) scale(1.05);
+  }
 }
 .avatar-badge {
   position: absolute;
@@ -892,10 +1058,10 @@
   font-weight: 600;
   border: none;
   text-align: center;
-  box-shadow: 0 16rpx 30rpx rgba(46, 26, 112, 0.22);
+  box-shadow: 0 16rpx 30rpx rgba(255, 111, 97, 0.2);
 }
 .btn-ready {
-  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
   color: white;
 }
 .btn-ready-done {
@@ -904,7 +1070,7 @@
   box-shadow: none;
 }
 .btn-start {
-  background: linear-gradient(135deg, #7d6ff0 0%, #5c4bcf 100%);
+  background: linear-gradient(135deg, #ff9b54 0%, #ff7a59 100%);
   color: white;
 }
 .btn-start-disabled {
@@ -915,7 +1081,7 @@
 .btn-submit-word {
   width: auto;
   padding: 0 40rpx;
-  background: #667eea;
+  background: #ff7a59;
   color: white;
   height: 80rpx;
   line-height: 80rpx;
@@ -928,7 +1094,7 @@
 .btn-send {
   width: auto;
   padding: 0 36rpx;
-  background: #667eea;
+  background: #ff7a59;
   color: white;
   height: 72rpx;
   line-height: 72rpx;
@@ -948,10 +1114,10 @@
 .bottom-section .word-input {
   flex: 1;
   padding: 18rpx 22rpx;
-  border: 2rpx solid #667eea;
+  border: 2rpx solid #ff7a59;
   border-radius: 44rpx;
   font-size: 28rpx;
-  background: #f8f9ff;
+  background: #fff8ec;
 }
 
 /* ===== 出词弹窗 ===== */
@@ -968,7 +1134,7 @@
 .word-modal {
   width: 88%;
   max-width: 680rpx;
-  background: #ffffff;
+  background: #fffdf8;
   border-radius: 24rpx;
   padding: 28rpx 24rpx;
   box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.25);
@@ -978,7 +1144,7 @@
   display: block;
   font-size: 34rpx;
   font-weight: 700;
-  color: #43356f;
+  color: #4b2e59;
   text-align: center;
 }
 
@@ -987,7 +1153,7 @@
   margin-top: 8rpx;
   margin-bottom: 20rpx;
   font-size: 24rpx;
-  color: #8e88a7;
+  color: #7a627f;
   text-align: center;
 }
 
@@ -1002,10 +1168,10 @@
   height: 84rpx;
   line-height: 84rpx;
   border-radius: 42rpx;
-  border: 2rpx solid #e0d7ff;
+  border: 2rpx solid #f2d6bf;
   padding: 0 24rpx;
   font-size: 28rpx;
-  background: #f8f6ff;
+  background: #fff8ec;
 }
 
 .word-modal-btn {
@@ -1014,7 +1180,7 @@
   line-height: 84rpx;
   border-radius: 42rpx;
   border: none;
-  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
   color: #fff;
   font-size: 28rpx;
   font-weight: 600;

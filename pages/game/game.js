@@ -48,6 +48,10 @@ Page({
     currentUserReady: false,
     showGameOver: false,
     finalScores: [],
+    showRoundReveal: false,
+    roundRevealWord: '',
+    roundRevealDrawer: '',
+    roundRevealRound: 0,
   },
 
   /* ==================== 数据同步 ==================== */
@@ -75,6 +79,7 @@ Page({
     const players = doc.players || [];
     const ownerOpenid = doc.ownerOpenid || '';
     const roomStatus = doc.status || 'waiting';
+    const lastRoundSummary = doc.lastRoundSummary || null;
     const isOwner = !!(ownerOpenid && ownerOpenid === openid);
     const isDrawer = !!(doc.currentDrawer && doc.currentDrawer === openid);
     const me = players.find(p => p.openid === openid);
@@ -113,7 +118,7 @@ Page({
       this.clearTimer();
       this._lastEndAt = null;
       this.stopRoundWatcher();
-      this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [] }, () => this.syncCanvasSize());
+    this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [], showRoundReveal: false }, () => this.syncCanvasSize());
     }
 
     // playing: 启动回合监听 + 推断回合阶段
@@ -144,6 +149,14 @@ Page({
     // finished: 显示结算
     if (roomStatus === 'finished') {
       this.onGameFinished(players);
+    }
+
+    if (!this._hasHydratedRoom) {
+      this._hasHydratedRoom = true;
+      this._lastShownRoundSummaryId = lastRoundSummary ? lastRoundSummary.roundId : '';
+    } else if (roomStatus === 'playing' && lastRoundSummary && lastRoundSummary.roundId !== this._lastShownRoundSummaryId) {
+      this._lastShownRoundSummaryId = lastRoundSummary.roundId;
+      this.showLastRoundReveal(lastRoundSummary);
     }
 
     // 绘制画板
@@ -215,6 +228,19 @@ Page({
     this.stopRoundWatcher();
     this.clearTimer();
     if (this._pollTimer) { clearInterval(this._pollTimer); this._pollTimer = null; }
+  },
+
+  showLastRoundReveal(summary) {
+    this.setData({
+      showRoundReveal: true,
+      roundRevealWord: summary.word || '',
+      roundRevealDrawer: summary.drawerNickName || '画手',
+      roundRevealRound: summary.roundIdx || 0,
+    });
+  },
+
+  hideRoundReveal() {
+    this.setData({ showRoundReveal: false });
   },
 
   /* ==================== 回合监听 ==================== */
@@ -559,6 +585,14 @@ Page({
   },
 
   /* ==================== 导航 ==================== */
+
+  onShareAppMessage() {
+    const { roomCode, roomId } = this.data;
+    return {
+      title: `来玩你画我猜，房间号 ${roomCode}`,
+      path: `/pages/index/index?inviteRoomCode=${roomCode}&inviteRoomId=${roomId}`
+    };
+  },
 
   backToHome() { wx.navigateBack({ delta: 2 }); },
   playAgain() { this.backToHome(); },

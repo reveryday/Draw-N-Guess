@@ -7,20 +7,20 @@
 }
 
 .action-card {
-  background: white;
+  background: #fffdf8;
   border-radius: 28rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
   display: flex;
   align-items: center;
   border: 1rpx solid rgba(255, 255, 255, 0.52);
-  box-shadow: 0 22rpx 56rpx rgba(53, 31, 121, 0.18);
+  box-shadow: 0 24rpx 60rpx rgba(176, 116, 57, 0.2);
   transition: all 0.3s ease;
 }
 
 .action-card:active {
   transform: translateY(2rpx) scale(0.995);
-  box-shadow: 0 14rpx 30rpx rgba(53, 31, 121, 0.14);
+  box-shadow: 0 14rpx 30rpx rgba(176, 116, 57, 0.14);
 }
 
 .action-icon {
@@ -30,7 +30,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
   border-radius: 22rpx;
   color: #fff;
   font-size: 40rpx;
@@ -50,19 +50,19 @@
   display: block;
   font-size: 32rpx;
   font-weight: 600;
-  color: #43356f;
+  color: #4b2e59;
   margin-bottom: 5rpx;
 }
 
 .action-desc {
   display: block;
   font-size: 26rpx;
-  color: #857caa;
+  color: #7a627f;
 }
 
 .action-arrow {
   font-size: 32rpx;
-  color: #b8b1d8;
+  color: #d5a285;
   font-weight: bold;
 }
 
@@ -72,27 +72,27 @@
   margin-bottom: 40rpx;
   width: 100%;
   max-width: 600rpx;
-  background: #ffffff;
+  background: #fffdf8;
   border-radius: 28rpx;
   padding: 40rpx 36rpx;
   box-sizing: border-box;
-  box-shadow: 0 22rpx 56rpx rgba(53, 31, 121, 0.18);
+  box-shadow: 0 24rpx 60rpx rgba(176, 116, 57, 0.2);
 }
 
 .user-info {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 253, 248, 0.7);
   border-radius: 28rpx;
   padding: 34rpx 42rpx;
   margin-bottom: 40rpx;
   text-align: center;
   backdrop-filter: blur(10rpx);
   border: 1rpx solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 22rpx 48rpx rgba(53, 31, 121, 0.16);
+  box-shadow: 0 24rpx 52rpx rgba(176, 116, 57, 0.18);
 }
 
 .username {
   display: block;
-  color: white;
+  color: #4b2e59;
   font-size: 32rpx;
   font-weight: 600;
   margin-top: 20rpx;
@@ -103,17 +103,17 @@
   height: 88rpx;
   padding: 0 0rpx 0 0rpx;
   font-size: 32rpx;
-  border: 2rpx solid #e0d7ff;
+  border: 2rpx solid #f2d6bf;
   border-radius: 18rpx;
-  background: #f8f6ff;
+  background: #fff8ec;
   transition: border-color 0.2s;
   margin: 40rpx auto 0;
   text-align: center;
-  color: #43356f;
+  color: #4b2e59;
 }
 
 .nickname-input:focus {
-  border-color: #7566d9;
+  border-color: #ff7a59;
   background: #fff;
 }
 
@@ -131,12 +131,12 @@
   height: 148rpx;
   padding: 0;
   border: none;
-  background: linear-gradient(135deg, #7566d9 0%, #5a4bc0 100%);
+  background: linear-gradient(135deg, #ff8d6b 0%, #ff6f61 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 18rpx 32rpx rgba(90, 75, 192, 0.22);
+  box-shadow: 0 18rpx 32rpx rgba(255, 111, 97, 0.22);
 }
 
 .avatar-picker::after {
@@ -158,10 +158,10 @@
 }
 
 .modal-content {
-  background: white;
+  background: #fffdf8;
   border-radius: 28rpx;
-  width: 85%;
-  max-width: 90%;
+  width: 88%;
+  max-width: 680rpx;
   overflow: hidden;
   box-shadow: 0 28rpx 70rpx rgba(0, 0, 0, 0.28);
 }
@@ -177,17 +177,28 @@
 .modal-title {
   font-size: 32rpx;
   font-weight: 600;
-  color: #43356f;
+  color: #4b2e59;
 }
 
 .modal-close {
   font-size: 40rpx;
-  color: #a9a2c8;
+  color: #c78f73;
   line-height: 1;
 }
 
 .modal-body {
   padding: 30rpx;
+}
+
+.modal-body .input-field {
+  width: 100%;
+  box-sizing: border-box;
+  height: 96rpx;
+  line-height: 96rpx;
+  padding-left: 24rpx;
+  padding-right: 24rpx;
+  text-align: left;
+  font-size: 28rpx;
 }
 
 .modal-body .btn-primary {
