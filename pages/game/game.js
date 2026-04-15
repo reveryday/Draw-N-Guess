@@ -1,5 +1,6 @@
 // pages/game/game.js
 const db = wx.cloud.database();
+const CANVAS_BG_COLOR = '#fffaf1';
 
 Page({
   data: {
@@ -118,7 +119,11 @@ Page({
       this.clearTimer();
       this._lastEndAt = null;
       this.stopRoundWatcher();
-    this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [], showRoundReveal: false }, () => this.syncCanvasSize());
+      this._confirmedStrokes = [];
+      this._confirmedStrokeCount = 0;
+      this._pendingStrokes = [];
+      this._activeStroke = null;
+      this.setData({ timeLeft: 0, roundStatus: 'idle', drawerWord: '', messages: [], showRoundReveal: false }, () => this.syncCanvasSize());
     }
 
     // playing: 启动回合监听 + 推断回合阶段
@@ -148,6 +153,8 @@ Page({
 
     // finished: 显示结算
     if (roomStatus === 'finished') {
+      this._pendingStrokes = [];
+      this._activeStroke = null;
       this.onGameFinished(players);
     }
 
@@ -159,8 +166,17 @@ Page({
       this.showLastRoundReveal(lastRoundSummary);
     }
 
-    // 绘制画板
-    this.drawAllStrokes(doc.strokes || []);
+    // 只在笔画数据真正变化时重绘，避免房间其他字段变更清掉本地临时笔迹。
+    const strokes = doc.strokes || [];
+    const nextStrokeCount = strokes.length;
+    const prevStrokeCount = typeof this._confirmedStrokeCount === 'number' ? this._confirmedStrokeCount : 0;
+    const changed = this.haveStrokesChanged(strokes, this._confirmedStrokes || []);
+    if (changed) {
+      if (this.data.isDrawer && nextStrokeCount > prevStrokeCount && this._pendingStrokes && this._pendingStrokes.length) {
+        this._pendingStrokes.splice(0, Math.min(nextStrokeCount - prevStrokeCount, this._pendingStrokes.length));
+      }
+      this.drawAllStrokes(strokes);
+    }
   },
 
   /* ==================== 生命周期 ==================== */
@@ -298,6 +314,10 @@ Page({
     ctx.setLineJoin('round');
     ctx.setLineWidth(3);
     ctx.setStrokeStyle('#000000');
+    this._confirmedStrokes = [];
+    this._confirmedStrokeCount = 0;
+    this._pendingStrokes = [];
+    this._activeStroke = null;
     this.setData({ canvasContext: ctx });
     this.syncCanvasSize();
   },
@@ -316,12 +336,7 @@ Page({
       if (!changed) return;
 
       this.setData({ canvasWidth, canvasHeight }, () => {
-        const ctx = this.data.canvasContext;
-        if (ctx) {
-          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-          ctx.draw(true);
-        }
-        this.fetchRoomOnce();
+        this.renderCanvas();
       });
     });
   },
@@ -333,39 +348,76 @@ Page({
   clearCanvas() {
     const ctx = this.data.canvasContext;
     const { canvasWidth, canvasHeight } = this.data;
+    this._confirmedStrokes = [];
+    this._confirmedStrokeCount = 0;
+    this._pendingStrokes = [];
+    this._activeStroke = null;
     if (ctx) { ctx.clearRect(0, 0, canvasWidth, canvasHeight); ctx.draw(true); }
     wx.cloud.callFunction({ name: 'clearStrokes', data: { roomId: this.data.roomId } });
   },
 
   drawAllStrokes(strokes) {
+    this._confirmedStrokes = (strokes || []).map(stroke => ({
+      ...stroke,
+      tool: stroke.tool || 'pen',
+      points: (stroke.points || []).map(point => ({ x: point.x, y: point.y }))
+    }));
+    this._confirmedStrokeCount = this._confirmedStrokes.length;
+    this.renderCanvas();
+  },
+
+  haveStrokesChanged(nextStrokes, prevStrokes) {
+    if (nextStrokes.length !== prevStrokes.length) return true;
+    for (let i = 0; i < nextStrokes.length; i += 1) {
+      const next = nextStrokes[i] || {};
+      const prev = prevStrokes[i] || {};
+      if ((next.tool || 'pen') !== (prev.tool || 'pen')) return true;
+      if ((next.color || '#000000') !== (prev.color || '#000000')) return true;
+      if ((next.width || 3) !== (prev.width || 3)) return true;
+      const nextPoints = next.points || [];
+      const prevPoints = prev.points || [];
+      if (nextPoints.length !== prevPoints.length) return true;
+      for (let j = 0; j < nextPoints.length; j += 1) {
+        if (nextPoints[j].x !== prevPoints[j].x || nextPoints[j].y !== prevPoints[j].y) return true;
+      }
+    }
+    return false;
+  },
+
+  renderCanvas() {
     const ctx = this.data.canvasContext;
     const { canvasWidth, canvasHeight } = this.data;
     if (!ctx) return;
+
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    if (!strokes || !strokes.length) {
-      ctx.draw(true);
+    (this._confirmedStrokes || []).forEach(stroke => this.paintStroke(ctx, stroke));
+    (this._pendingStrokes || []).forEach(stroke => this.paintStroke(ctx, stroke));
+    this.paintStroke(ctx, this._activeStroke);
+    ctx.draw(true);
+  },
+
+  paintStroke(ctx, stroke) {
+    if (!ctx || !stroke || !stroke.points || !stroke.points.length) return;
+    const tool = stroke.tool || 'pen';
+    const strokeColor = tool === 'eraser' ? CANVAS_BG_COLOR : (stroke.color || '#000000');
+    if (stroke.points.length === 1) {
+      const point = stroke.points[0];
+      const size = Math.max(3, stroke.width || 3);
+      ctx.setFillStyle(strokeColor);
+      ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
       return;
     }
-    strokes.forEach(stroke => {
-      if (!stroke.points || !stroke.points.length) return;
-      if (stroke.points.length === 1) {
-        const point = stroke.points[0];
-        const size = Math.max(3, stroke.width || 3);
-        ctx.setFillStyle(stroke.color || '#000000');
-        ctx.fillRect(point.x - size / 2, point.y - size / 2, size, size);
-        return;
-      }
-      ctx.setStrokeStyle(stroke.color);
-      ctx.setLineWidth(stroke.width);
-      ctx.setLineCap('round');
-      ctx.beginPath();
-      stroke.points.forEach((p, i) => {
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      });
-      ctx.stroke();
+
+    ctx.setStrokeStyle(strokeColor);
+    ctx.setLineWidth(stroke.width || 3);
+    ctx.setLineCap('round');
+    ctx.setLineJoin('round');
+    ctx.beginPath();
+    stroke.points.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
     });
-    ctx.draw(true);
+    ctx.stroke();
   },
 
   /* ==================== 绘图事件 ==================== */
@@ -373,50 +425,55 @@ Page({
   onTouchStart(e) {
     if (!this.data.isDrawer || this.data.roundStatus !== 'drawing') return;
     const { x, y } = e.touches[0];
-    const ctx = this.data.canvasContext;
     const isPen = this.data.selectedTool === 'pen';
-    if (ctx) {
-      const size = isPen ? 3 : 10;
-      ctx.setFillStyle(isPen ? '#000000' : '#ffffff');
-      ctx.fillRect(x - size / 2, y - size / 2, size, size);
-      ctx.draw(true);
-    }
-    this.setData({ isDrawing: true, drawingBuffer: [{ x, y }] });
+    this._activeStroke = {
+      tool: isPen ? 'pen' : 'eraser',
+      color: '#000000',
+      width: isPen ? 3 : 28,
+      points: [{ x, y }]
+    };
+    this.renderCanvas();
+    this.setData({ isDrawing: true, drawingBuffer: [] });
   },
 
   onTouchMove(e) {
-    if (!this.data.isDrawing) return;
+    if (!this.data.isDrawing || !this._activeStroke) return;
     const { x, y } = e.touches[0];
     const ctx = this.data.canvasContext;
-    const buf = this.data.drawingBuffer;
-    const last = buf[buf.length - 1];
-    const isPen = this.data.selectedTool === 'pen';
-    ctx.setStrokeStyle(isPen ? '#000000' : '#ffffff');
-    ctx.setLineWidth(isPen ? 3 : 10);
-    ctx.beginPath();
-    ctx.moveTo(last.x, last.y);
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    const points = this._activeStroke.points;
+    const last = points[points.length - 1];
+    this._activeStroke.points.push({ x, y });
+    if (!ctx || !last) {
+      this.renderCanvas();
+      return;
+    }
+    this.paintStroke(ctx, {
+      tool: this._activeStroke.tool,
+      color: this._activeStroke.color,
+      width: this._activeStroke.width,
+      points: [last, { x, y }]
+    });
     ctx.draw(true);
-    this.setData({ drawingBuffer: [...buf, { x, y }] });
   },
 
   onTouchEnd() {
-    if (!this.data.isDrawing) return;
-    this.setData({ isDrawing: false });
-    const isPen = this.data.selectedTool === 'pen';
+    if (!this.data.isDrawing || !this._activeStroke) return;
+    const stroke = {
+      tool: this._activeStroke.tool,
+      color: this._activeStroke.color,
+      width: this._activeStroke.width,
+      points: this._activeStroke.points.map(point => ({ x: point.x, y: point.y }))
+    };
+    this._pendingStrokes.push(stroke);
+    this._activeStroke = null;
+    this.setData({ isDrawing: false, drawingBuffer: [] });
     wx.cloud.callFunction({
       name: 'sendStroke',
       data: {
         roomId: this.data.roomId,
-        stroke: {
-          color: isPen ? '#000000' : '#ffffff',
-          width: isPen ? 3 : 10,
-          points: this.data.drawingBuffer
-        }
+        stroke
       }
     });
-    this.setData({ drawingBuffer: [] });
   },
 
   /* ==================== 画手出题 ==================== */

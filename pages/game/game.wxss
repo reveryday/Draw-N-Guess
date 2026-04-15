@@ -208,8 +208,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(255, 250, 241, 1));
+  background: #fffaf1;
   border: 3rpx solid #f3d9bc;
   border-radius: 24rpx;
   box-shadow: inset 0 0 0 8rpx rgba(255, 179, 71, 0.06);

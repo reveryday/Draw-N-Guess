@@ -78,7 +78,10 @@ exports.main = async (event) => {
 
   // 6. 开始下一回合
   const nextRoundIdx = currentRoundIdx + 1;
-  const nextDrawerIdx = currentRoundIdx % updatedPlayers.length;
+  const currentDrawerIdx = updatedPlayers.findIndex(p => p.openid === round.drawer);
+  const nextDrawerIdx = currentDrawerIdx >= 0
+    ? (currentDrawerIdx + 1) % updatedPlayers.length
+    : 0;
   const nextDrawer = updatedPlayers[nextDrawerIdx].openid;
 
   const newRoundRes = await db.collection('rounds').add({
